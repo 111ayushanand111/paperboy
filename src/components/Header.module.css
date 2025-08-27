@@ -1,0 +1,53 @@
+/* src/components/Header.module.css */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  color: #D1D5DB;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.searchContainer {
+  position: relative;
+  flex-grow: 1;
+  max-width: 700px;
+  margin: 0 1rem;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+}
+
+.searchInput {
+  width: 100%;
+  background-color: #1A2E2C;
+  border: 1px solid #4B5563;
+  border-radius: 0.5rem;
+  padding: 0.5rem 2.5rem;
+  color: white;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #14B8A6;
+}
+
+.authLinks {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  font-size: 1.125rem;
+}
+
+.authLinks a:hover {
+  color: white;
+}

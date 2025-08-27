@@ -1,0 +1,34 @@
+/* src/components/NewsCarousel.module.css */
+.carousel {
+  position: relative;
+  background-color: #111C33; /* Using the blue theme color */
+  color: white;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16rem;
+  margin: 1rem 0;
+}
+
+.title {
+  font-size: 3.75rem;
+  font-weight: bold;
+}
+
+.arrow {
+  position: absolute;
+  font-size: 2.25rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.arrowLeft {
+  left: 1.25rem;
+}
+
+.arrowRight {
+  right: 1.25rem;
+}

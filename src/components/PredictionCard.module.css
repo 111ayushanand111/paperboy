@@ -1,0 +1,83 @@
+/* src/components/PredictionCard.module.css */
+.card {
+  background-color: #042F2C;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  color: white;
+  /* Add flex properties to control the card's internal layout */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* This adds space between the header and the options */
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* Replaces margin-right on the icon */
+}
+
+.icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  /* Give the icon a minimum width so titles align nicely */
+  min-width: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  /* Allow long words to break to prevent overflow */
+  word-break: break-word;
+}
+
+.optionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem; /* Add gap for spacing */
+}
+
+.optionName {
+  font-size: 1.125rem;
+  /* Allow the name to grow but not shrink */
+  flex-grow: 1;
+  word-break: break-word; /* handle long option names */
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  /* Prevent controls from shrinking */
+  flex-shrink: 0;
+}
+
+.percentage {
+  color: #9CA3AF;
+}
+
+.choiceButton {
+  padding: 0.25rem 1.25rem;
+  border-radius: 9999px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.yesButton {
+  background-color: #14B8A6;
+  color: black;
+}
+
+.noButton {
+  background-color: #374151;
+  color: white;
+}
