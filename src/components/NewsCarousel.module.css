@@ -1,14 +1,23 @@
 /* src/components/NewsCarousel.module.css */
 .carousel {
   position: relative;
-  background-color: #111C33; /* Using the blue theme color */
+  background-color: #111C33;
   color: white;
   border-radius: 1rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between; /* Use space-between to push items to the ends */
   height: 16rem;
   margin: 1rem 0;
+  padding: 0 1.25rem; /* Add padding to prevent the title container from touching the edges */
+  overflow: hidden; /* Hide any content that goes beyond the container */
+}
+
+/* New style for the title container */
+.titleContainer {
+  flex-grow: 1; /* Allows the container to fill the available space */
+  text-align: center; /* Centers the title text */
+  margin: 0 2rem; /* Add some margin to give space between the title and arrows */
 }
 
 .title {
@@ -17,18 +26,12 @@
 }
 
 .arrow {
-  position: absolute;
+  /* Remove absolute positioning, now handled by flexbox */
   font-size: 2.25rem;
   background: none;
   border: none;
   color: white;
   cursor: pointer;
+  z-index: 10; /* Ensure arrows are above the title content if needed */
 }
 
-.arrowLeft {
-  left: 1.25rem;
-}
-
-.arrowRight {
-  right: 1.25rem;
-}
