@@ -1,106 +1,129 @@
-# Paperboy
+Here is a detailed README for the "Paperboy" project, based on the provided repository files.
 
-Prediction-based Platform for Gamifying News
+-----
 
-Paperboy is a web-based prediction and news gamification platform designed to make consuming news more engaging and interactive. Users can make predictions on current events, earn points, build streaks, and compete on leaderboards — turning news into an informed, competitive, and fun experience.
+# Paperboy 📰
 
----
+Paperboy is a web application that gamifies news consumption. It automatically fetches the latest news articles from various categories, generates multiple-choice polls based on their headlines, and allows users to vote on them. Registered users can track their statistics, accuracy, and compete on a global leaderboard.
 
-## Features
+## Core Features
 
-* User Authentication (via Firebase)
-* Curated News Events from third-party APIs
-* Prediction System – make predictions on active events
-* Leaderboards & Gamification – points, ranks, and streak tracking
-* Admin Event Resolution System
-* Notifications for event results
-
----
+  * **Dynamic Poll Generation:** Automatically fetches top headlines from the **NewsAPI** across various topics (politics, sports, tech, etc.) and converts them into interactive polls.
+  * **User Authentication:** Secure user registration and login system using **JWT (JSON Web Tokens)** for authentication and **bcrypt** for password hashing.
+  * **Gamified User Stats:** Registered users have a profile page that tracks their total polls attempted, correct answers, and overall accuracy percentage, complete with a progress bar.
+  * **Global Leaderboard:** The profile page also features a global leaderboard, ranking all users by their accuracy.
+  * **Category Filtering:** The main feed allows users to filter polls by category, including "For You" (randomized), "Trending", "Politics", "Science", "Sports", and "Tech".
+  * **Live News Search:** A search bar in the header allows users to search for real-time news articles directly from the NewsAPI.
+  * **Interactive UI:** Built with **React**, featuring a "Top News" carousel, category navigation, and responsive poll cards that provide instant feedback.
 
 ## Tech Stack
 
-* Frontend: React.js, Tailwind CSS
-* Backend: Node.js, Express.js
-* Database: MongoDB
-* Hosting & Authentication: Firebase
-* APIs: Third-party News API
+  * **Frontend:** React, Vite, React Router, Axios, CSS Modules
+  * **Backend:** Node.js, Express.js
+  * **Database:** MongoDB (using Mongoose)
+  * **Authentication:** JSON Web Tokens (JWT) & bcryptjs
+  * **APIs:** NewsAPI (for poll generation and live search)
 
----
+## Project Structure
 
-## Installation
+```
+/paperboy-main/
+├── server/             # Express.js Backend
+│   ├── models/         # Mongoose Schemas (User, UserStats, Question)
+│   ├── index.js        # Main server file (API routes, DB connection)
+│   ├── newsPollGenerator.js # Logic for fetching from NewsAPI and creating polls
+│   ├── .env            # Server environment variables
+│   └── package.json
+│
+└── src/                # React.js Frontend
+    ├── components/     # Reusable React components (Header, PollCard, etc.)
+    ├── pages/          # View components (Login, Register, Profile)
+    ├── App.jsx         # Main application component (poll feed)
+    ├── main.jsx        # React entrypoint and routing
+    └── ...
+├── index.html
+└── package.json        # Client package.json
+```
 
-1. Clone the repository:
+## Setup and Installation
 
-   ```bash
-   git clone https://github.com/your-username/paperboy.git
-   cd paperboy
-   ```
+### Prerequisites
 
-2. Install dependencies for both frontend and backend:
+  * **Node.js** (v18 or higher)
+  * **MongoDB** (a running local or cloud instance)
+  * A **NewsAPI Key** from [newsapi.org](https://newsapi.org/)
 
-   ```bash
-   cd client
-   npm install
-   cd ../server
-   npm install
-   ```
+-----
 
-3. Create a `.env` file in the backend with the following:
+### 1\. Backend (Server) Setup
 
-   ```
-   MONGO_URI=<your-mongodb-uri>
-   FIREBASE_API_KEY=<your-firebase-api-key>
-   NEWS_API_KEY=<your-news-api-key>
-   JWT_SECRET=<your-secret-key>
-   ```
+1.  Navigate to the server directory:
 
-4. Run the development servers:
+    ```bash
+    cd server
+    ```
 
-   ```bash
-   cd client
-   npm start
-   # In another terminal
-   cd server
-   npm run dev
-   ```
+2.  Install server dependencies:
 
----
+    ```bash
+    npm install
+    ```
 
-## Usage
+3.  Create a `.env` file in the `server/` directory and add your configuration:
 
-* Register or log in with your email and password
-* Browse active news events and make predictions
-* Earn points and track streaks
-* View rankings on the leaderboard
-* Admins can resolve events and update results
+    ```.env
+    # Your MongoDB connection string
+    MONGO_URI=mongodb://127.0.0.1:27017/paperboy
 
----
+    # Your key from newsapi.org
+    NEWS_API_KEY=<your_newsapi_key>
+    ```
 
-## Contributing
+    *(Note: The `JWT_SECRET` is currently hardcoded in `server/index.js` as `"paperboy_secret"`).*
 
-1. Fork the repo
-2. Create a new branch (`feature/your-feature-name`)
-3. Commit your changes
-4. Push to your fork
-5. Open a Pull Request
+4.  Start the backend server:
 
----
+    ```bash
+    npm start
+    ```
+
+    The server will be running on `http://localhost:5000`.
+
+-----
+
+### 2\. Frontend (Client) Setup
+
+1.  From the project's **root directory** (`paperboy-main - Copy/`), install the client dependencies:
+    ```bash
+    npm install
+    ```
+2.  Run the client development server:
+    ```bash
+    npm run dev
+    ```
+    The React application will be available at `http://localhost:5173` (or a similar port).
+
+## API Endpoints
+
+The backend server (`http://localhost:5000`) provides the following endpoints:
+
+  * `POST /api/register`: Creates a new user.
+  * `POST /api/login`: Logs in a user and returns a JWT.
+  * `GET /api/profile`: (Auth Required) Gets the logged-in user's data, quiz stats, and the global leaderboard.
+  * `GET /api/questions`: Gets polls. Can be filtered with `?category=...` (e.g., `politics`, `trending`).
+  * `POST /api/answer`: Submits a poll answer. Updates user stats if a valid token is provided.
+  * `GET /api/search-news`: Searches NewsAPI for articles. Requires a query param `?q=...`.
+  * `GET /api/generate-news`: Manually triggers the script to fetch new articles and generate polls.
 
 ## Authors
 
-* Ayush Anand - [iit2024246@iiita.ac.in](mailto:iit2024246@iiita.ac.in)
-* Shivam Yogesh Mishra - [iit2024215@iiita.ac.in](mailto:iit2024215@iiita.ac.in)
-* Shaurya Bhardwaj - [iit2024251@iiita.ac.in](mailto:iit2024251@iiita.ac.in)
-* Rishit Balaji - [iit2024242@iiita.ac.in](mailto:iit2024242@iiita.ac.in)
-* Adabala Sridhar - [iit2024218@iiita.ac.in](mailto:iit2024218@iiita.ac.in)
-* Murari Kandagatla - [iit2024252@iiita.ac.in](mailto:iit2024252@iiita.ac.in)
-
----
+  * Ayush Anand
+  * Shivam Yogesh Mishra
+  * Shaurya Bhardwaj
+  * Rishit Balaji
+  * Adabala Sridhar
+  * Murari Kandagatla
 
 ## License
 
 This project is licensed under the MIT License.
-
----
-
-Do you want me to also include a **project structure tree** (like `/client`, `/server`, `/docs`, etc.) in the README for clarity?
