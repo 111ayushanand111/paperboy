@@ -5,13 +5,12 @@ import Header from "../components/Header";
 import styles from "./MarketDetail.module.css";
 
 // Chart.js imports
+// --- REMOVED TimeScale ---
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 import { Line } from "react-chartjs-2";
+// --- REMOVED TimeScale from registration ---
 ChartJS.register( CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend );
 
-// Mock data generation (keep for now, replace later)
-const labels = ["May", "Jun", "Jul", "Aug", "Sep", "Oct"];
-const generateRandomData = () => Array.from({ length: 6 }, () => Math.random() * 80 + 10);
 
 export default function MarketDetail() {
   const [question, setQuestion] = useState(null);
@@ -21,43 +20,78 @@ export default function MarketDetail() {
   const [betStatus, setBetStatus] = useState({ message: "", type: "" });
   const [relatedNews, setRelatedNews] = useState([]);
   const [loadingNews, setLoadingNews] = useState(false);
+  
+  const [chartData, setChartData] = useState({ labels: [], datasets: [] });
+  const [loadingChart, setLoadingChart] = useState(true);
+  
   const { questionId } = useParams();
 
-  // --- Function to fetch only the question data ---
+  // Function to fetch only the chart history
+  const fetchChartData = async () => {
+    try {
+      console.log("Fetching chart history...");
+      setLoadingChart(true);
+      const res = await axios.get(`http://localhost:5000/api/question/${questionId}/history`);
+      if (res.data.labels && res.data.datasets) {
+        setChartData(res.data);
+        console.log("Chart data fetched.", res.data);
+      } else {
+        setChartData({ labels: [], datasets: [] });
+      }
+    } catch (err) {
+      console.error("Error fetching chart history:", err);
+      setChartData({ labels: [], datasets: [] });
+    } finally {
+      setLoadingChart(false);
+    }
+  };
+
+  // Function to fetch only the question data (for price updates)
   const fetchQuestionDataOnly = async () => {
     try {
         console.log("Refetching question data after bet...");
         const res = await axios.get(`http://localhost:5000/api/question/${questionId}`);
-        setQuestion(res.data); // Update the question state with new prices
+        setQuestion(res.data);
          console.log("Question data refetched.", res.data);
     } catch (err) {
         console.error("Error refetching question data:", err);
-        // Optionally set an error state if refetch fails
     }
   };
 
-
-  // Fetch Initial Question and News Data
+  // Fetch Initial Question, News, and Chart Data
   useEffect(() => {
-    const fetchQuestionAndNews = async () => {
+    const fetchAllData = async () => {
       try {
         setLoading(true); setLoadingNews(true);
         const resQuestion = await axios.get(`http://localhost:5000/api/question/${questionId}`);
         const fetchedQuestion = resQuestion.data;
         setQuestion(fetchedQuestion);
+        
         if (fetchedQuestion?.title) {
+          // Fetch news
           try {
             const searchQuery = fetchedQuestion.title.replace(/\?$/, "");
             const resNews = await axios.get(`http://localhost:5000/api/related-news?q=${encodeURIComponent(searchQuery)}`);
             setRelatedNews(resNews.data);
           } catch (newsErr) { console.error("Error fetching related news:", newsErr); setRelatedNews([]); }
           finally { setLoadingNews(false); }
-        } else { setLoadingNews(false); }
-      } catch (err) { console.error("Error fetching question details:", err); setLoadingNews(false); }
+          
+          // Fetch initial chart data
+          await fetchChartData(); 
+            
+        } else { 
+            setLoadingNews(false);
+            setLoadingChart(false);
+        }
+      } catch (err) { 
+          console.error("Error fetching question details:", err); 
+          setLoadingNews(false);
+          setLoadingChart(false);
+      }
       finally { setLoading(false); }
     };
-    fetchQuestionAndNews();
-  }, [questionId]); // Dependency array is correct
+    fetchAllData();
+  }, [questionId]);
 
   // Function to Handle Bet Submission
   const handleBetSubmit = async () => {
@@ -83,27 +117,22 @@ export default function MarketDetail() {
       setBetStatus({ message: "Bet placed successfully!", type: "success" });
       console.log("Bet response:", response.data);
 
-      // Update localStorage and dispatch event for Header update
       if (response.data.newBalance !== undefined) {
         console.log("[MarketDetail] Updating localStorage with points:", response.data.newBalance);
         localStorage.setItem("userPoints", response.data.newBalance.toString());
         console.log("[MarketDetail] Dispatching pointsUpdated event");
         window.dispatchEvent(new Event('pointsUpdated'));
-      } else {
-         console.log("[MarketDetail] newBalance not found in API response");
       }
 
-      // --- Refetch question data to show updated prices ---
-      await fetchQuestionDataOnly();
-      // ---
+      // Refetch BOTH question data (for prices) AND chart data
+      await Promise.all([
+          fetchQuestionDataOnly(),
+          fetchChartData()
+      ]);
 
-      // Optionally clear fields after a short delay
-      // setTimeout(() => {
-      //     setBetStatus({ message: "", type: "" }); // Clear status message
-      //     setSelectedOption(null);
-      //     setBetAmount("");
-      // }, 2000);
-
+      setSelectedOption(null);
+      setBetAmount("");
+      setTimeout(() => setBetStatus({ message: "", type: "" }), 2000);
 
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Failed to place bet. Please try again.";
@@ -116,15 +145,46 @@ export default function MarketDetail() {
   if (loading) return <div className={styles.loading}>Loading Market Details...</div>;
   if (!question) return <div className={styles.loading}>Market not found or failed to load.</div>;
 
-  // Define variables *after* loading checks
+  // --- Define variables *after* loading checks ---
+  
+  // Chart.js options
   const chartOptions = {
     responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { position: "top", labels: { color: "white" } } },
-    scales: { x: { ticks: { color: "white" }, grid: { color: "rgba(255, 255, 255, 0.1)" } }, y: { ticks: { color: "white" }, grid: { color: "rgba(255, 255, 255, 0.1)" }, min: 0, max: 100 }, },
+    plugins: { 
+        legend: { position: "top", labels: { color: "white" } },
+        tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+                label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) { label += ': '; }
+                    if (context.parsed.y !== null) { label += context.parsed.y + '¢'; }
+                    return label;
+                }
+            }
+        }
+    },
+    scales: { 
+      x: { 
+        // --- REVERTED to default 'category' scale ---
+        // type: 'time', // This line caused the crash
+        ticks: { color: "white" }, 
+        grid: { color: "rgba(255, 255, 255, 0.1)" } 
+      }, 
+      y: { 
+        ticks: { color: "white", callback: (value) => `${value}¢` },
+        grid: { color: "rgba(255, 255, 255, 0.1)" }, 
+        min: 0, 
+        max: 100 
+      }, 
+    },
+    hover: {
+        mode: 'index',
+        intersect: false
+    },
   };
-  const chartData = {
-    labels, datasets: question.options.map((opt, i) => { const colors = ["#34d399", "#60a5fa", "#f87171", "#c084fc"]; const color = colors[i % colors.length]; return { label: opt.name, data: generateRandomData(), borderColor: color, backgroundColor: color, }; }) || [],
-  };
+  
   const isYesNoMarket = question.options.length === 2 && question.options.some((o) => o.name.toLowerCase() === "yes") && question.options.some((o) => o.name.toLowerCase() === "no");
   const yesOption = isYesNoMarket ? question.options.find(o => o.name.toLowerCase() === 'yes') : null;
   const noOption = isYesNoMarket ? question.options.find(o => o.name.toLowerCase() === 'no') : null;
@@ -140,25 +200,31 @@ export default function MarketDetail() {
         {/* Graph and Voting Panel */}
         <div className={styles.mainContent}>
           <div className={styles.graphContainer}>
-            {chartData.datasets.length > 0 && <Line options={chartOptions} data={chartData} />}
+            {loadingChart ? (
+                <div className={styles.loadingChart}>Loading chart...</div>
+            ) : chartData.datasets.length > 0 && chartData.labels.length > 0 ? (
+                <Line options={chartOptions} data={chartData} />
+            ) : (
+                <div className={styles.loadingChart}>No price history available.</div>
+            )}
           </div>
           <div className={styles.tradeContainer}>
             <h3 className={styles.tradeTitle}>Place Your Bet</h3>
 
-            {/* Option Selection Buttons - Displaying UPDATED prices from question state */}
+            {/* Option Selection Buttons */}
             {isYesNoMarket && yesOption && noOption ? (
               <div className={styles.yesNoContainer}>
                 <button
                   className={`${styles.yesButton} ${selectedOption === yesOption.name ? styles.selected : ''}`}
                   onClick={() => setSelectedOption(yesOption.name)}
                 >
-                  Yes {question.options.find(o => o.name === yesOption.name)?.price ?? yesOption.price}¢ {/* Use updated price */}
+                  Yes {question.options.find(o => o.name === yesOption.name)?.price ?? yesOption.price}¢
                 </button>
                 <button
                   className={`${styles.noButton} ${selectedOption === noOption.name ? styles.selected : ''}`}
                   onClick={() => setSelectedOption(noOption.name)}
                 >
-                  No {question.options.find(o => o.name === noOption.name)?.price ?? noOption.price}¢ {/* Use updated price */}
+                  No {question.options.find(o => o.name === noOption.name)?.price ?? noOption.price}¢
                 </button>
               </div>
             ) : (
@@ -170,7 +236,7 @@ export default function MarketDetail() {
                     onClick={() => setSelectedOption(opt.name)}
                   >
                     <span>{opt.name}</span>
-                    <span>{opt.price}¢</span> {/* Price updates automatically when question state changes */}
+                    <span>{opt.price}¢</span>
                   </button>
                 ))}
               </div>

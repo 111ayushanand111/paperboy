@@ -237,76 +237,78 @@ app.get("/api/profile", async (req, res) => {
 });
 
 // --- Simple Placeholder Market Maker Logic ---
+// --- Updated Placeholder Market Maker Logic ---
 async function updateMarketPrices(questionId, boughtOptionName, betAmount) {
   try {
     const question = await Question.findById(questionId);
     if (!question || question.resolvingOptionName) {
-      // Don't update prices if question not found or already resolved
       return;
     }
 
     const options = question.options;
     const numOptions = options.length;
-    if (numOptions < 2) return; // Need at least two options
+    if (numOptions < 2) return;
 
     const boughtOption = options.find(opt => opt.name === boughtOptionName);
-    if (!boughtOption) return; // Should not happen if validation passed before
+    if (!boughtOption) return;
 
-    // --- Basic Price Adjustment ---
-    // Increase the bought option's price slightly (e.g., by 1-5 points based on bet size, capping at 99)
-    // This is a VERY crude approximation. Real market makers use complex formulas.
-    const priceIncrease = Math.min(5, Math.max(1, Math.floor(betAmount / 20))); // Increase 1-5 points, max
-    let newBoughtPrice = Math.min(99, boughtOption.price + priceIncrease); // Cap at 99
-    const actualIncrease = newBoughtPrice - boughtOption.price; // How much it actually increased
+    // --- Basic Price Adjustment (same as before) ---
+    const priceIncrease = Math.min(5, Math.max(1, Math.floor(betAmount / 20)));
+    let newBoughtPrice = Math.min(99, boughtOption.price + priceIncrease);
+    const actualIncrease = newBoughtPrice - boughtOption.price;
 
-    // Distribute the decrease among other options proportionally to their current price
     let totalOtherPrice = 100 - boughtOption.price;
     let decreaseDistributed = 0;
 
     options.forEach(opt => {
       if (opt.name !== boughtOptionName && totalOtherPrice > 0) {
-        // Calculate proportional decrease
         let decrease = Math.round(actualIncrease * (opt.price / totalOtherPrice));
-        // Ensure price doesn't go below 1
         opt.price = Math.max(1, opt.price - decrease);
-        decreaseDistributed += decrease; // Track how much we decreased
+        decreaseDistributed += decrease;
       }
     });
 
-    // Set the new price for the bought option
     boughtOption.price = newBoughtPrice;
 
-    // --- Re-normalize prices to ensure they sum to 100 ---
-    // Due to rounding or caps, the sum might be slightly off.
+    // --- Re-normalize prices (same as before) ---
     let currentSum = options.reduce((sum, opt) => sum + opt.price, 0);
     let difference = 100 - currentSum;
 
-    // If there's a difference, adjust the highest/lowest priced option (excluding the one just bought if possible)
     if (difference !== 0) {
       let adjustOption = options.find(opt => opt.name !== boughtOptionName && opt.price > 1 && opt.price < 99);
-      if (!adjustOption) { // If all others are at limits, adjust the bought one
+      if (!adjustOption) {
           adjustOption = boughtOption;
       }
-      adjustOption.price = Math.max(1, Math.min(99, adjustOption.price + difference)); // Adjust and clamp
+      adjustOption.price = Math.max(1, Math.min(99, adjustOption.price + difference));
     }
-     // Final check (optional): Recalculate sum and log if still not 100
-     currentSum = options.reduce((sum, opt) => sum + opt.price, 0);
-     if (currentSum !== 100) {
-          console.warn(`Price normalization warning: Final sum for ${questionId} is ${currentSum}`);
-          // Implement more robust normalization if needed
-     }
+    
+    currentSum = options.reduce((sum, opt) => sum + opt.price, 0);
+    if (currentSum !== 100 && options.length > 0) {
+         // Force the first option (or any option) to absorb the final rounding error
+         options[0].price = Math.max(1, Math.min(99, options[0].price + (100 - currentSum)));
+    }
     // --- End Re-normalization ---
 
 
-    // Mark options as modified for Mongoose
+    // --- NEW: Add the new prices to the history ---
+    question.priceHistory.push({
+      prices: question.options.map(opt => ({ name: opt.name, price: opt.price }))
+      // Timestamp will be added by default
+    });
+    // ---
+
+    // Mark options as modified
     question.markModified('options');
-    await question.save();
+    question.markModified('priceHistory'); // Mark history as modified
+    await question.save(); // Save everything in one go
+
     console.log(`Prices updated for question ${questionId}. New prices:`, question.options.map(o => `${o.name}: ${o.price}¢`).join(', '));
 
   } catch (error) {
     console.error(`❌ Error updating market prices for question ${questionId}:`, error.message);
   }
 }
+// --- End Updated Market Maker ---
 // --- End Placeholder Market Maker ---
 
 // --- NEW ROUTE: Handle Bet Placement ---
@@ -398,6 +400,58 @@ app.post("/api/bet", async (req, res) => {
   }
 });
 // --- End Updated /api/bet Route ---
+// --- NEW ROUTE: Get Price History for Graph ---
+app.get("/api/question/:id/history", async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id)
+                                   .select("options priceHistory"); // Only select fields we need
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    // --- Format data for Chart.js ---
+    // 1. Create labels (timestamps)
+    // Format timestamps to be more readable (e.g., "Oct 25, 9:40 PM")
+    const labels = question.priceHistory.map(entry => {
+        return new Date(entry.timestamp).toLocaleString('en-US', {
+            month: 'short', day: 'numeric',
+            hour: 'numeric', minute: '2-digit', hour12: true
+        });
+    });
+
+    // 2. Create datasets (one for each option)
+    const datasets = question.options.map(option => {
+        const colors = {"Yes": "#34d399", "No": "#f87171"}; // Simple colors for Yes/No
+        const defaultColors = ["#34d399", "#60a5fa", "#f87171", "#c084fc"];
+
+        // Find the price for this option in each history entry
+        const data = question.priceHistory.map(entry => {
+            const priceEntry = entry.prices.find(p => p.name === option.name);
+            return priceEntry ? priceEntry.price : null; // Use null for missing data
+        });
+
+        // Pick a color
+        const color = colors[option.name] || defaultColors[question.options.indexOf(option) % defaultColors.length];
+
+        return {
+            label: option.name, // "Yes", "No", "Candidate A", etc.
+            data: data,
+            borderColor: color,
+            backgroundColor: color + '33', // Lighter color for area fill (optional)
+            fill: false, // Don't fill under the line
+            tension: 0.1 // Make the line slightly curved
+        };
+    });
+
+    res.json({ labels, datasets });
+    // --- End Format Data ---
+
+  } catch (err) {
+    console.error(`❌ Error fetching price history for ${req.params.id}:`, err.message);
+    res.status(500).json({ message: "Failed to fetch price history" });
+  }
+});
+// --- END NEW ROUTE ---
 
 // Start the server
 app.listen(5000, () => console.log("🚀 Server running on port 5000"));

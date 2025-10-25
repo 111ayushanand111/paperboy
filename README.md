@@ -44,65 +44,69 @@ Paperboy is a web application that gamifies news consumption. It automatically f
 ├── index.html
 └── package.json        # Client package.json
 ```
+🚀 Setup and Installation
+Follow these instructions to get the project running locally on your machine.
 
-## Setup and Installation
+Prerequisites
+Node.js: Make sure you have Node.js (which includes npm) installed. Download Node.js
 
-### Prerequisites
+MongoDB: You must have a MongoDB server running locally. Download MongoDB Community Server
 
-  * **Node.js** (v18 or higher)
-  * **MongoDB** (a running local or cloud instance)
-  * A **NewsAPI Key** from [newsapi.org](https://newsapi.org/)
+Step 1: Clone the Repository
+Clone the project to your local machine (if you haven't already):
 
------
+Bash
 
-### 1\. Backend (Server) Setup
+git clone https://github.com/YourUsername/YourNewRepoName.git
+cd YourNewRepoName
+This project has two parts: the Backend Server (in the /server folder) and the Frontend Client (in the root folder). You must install dependencies and run both.
 
-1.  Navigate to the server directory:
+Step 2: Backend Setup (Terminal 1)
+Navigate into the server directory:
 
-    ```bash
-    cd server
-    ```
+Bash
 
-2.  Install server dependencies:
+cd server
+Install all required backend dependencies (including express, mongoose, openai, etc.):
 
-    ```bash
-    npm install
-    ```
+Bash
 
-3.  Create a `.env` file in the `server/` directory and add your configuration:
+npm install
+Create the Environment File: Create a new file in the server folder named .env and paste the following content into it:
 
-    ```.env
-    # Your MongoDB connection string
-    MONGO_URI=mongodb://127.0.0.1:27017/paperboy
+# Your local MongoDB connection string
+MONGO_URI=mongodb://127.0.0.1:27017/paperboy
 
-    # Your key from newsapi.org
-    NEWS_API_KEY=<your_newsapi_key>
-    ```
+# Your API key from https://newsapi.org/
+NEWS_API_KEY=<PASTE_YOUR_NEWS_API_KEY>
 
-    *(Note: The `JWT_SECRET` is currently hardcoded in `server/index.js` as `"paperboy_secret"`).*
+# Your API key from https://huggingface.co/ (or other router)
+HF_TOKEN=<PASTE_YOUR_HUGGINGFACE_TOKEN>
+Note: You must replace the placeholders with your actual API keys.
 
-4.  Start the backend server:
+Start the backend server:
 
-    ```bash
-    npm start
-    ```
+Bash
 
-    The server will be running on `http://localhost:5000`.
+npm start
+The server should now be running on http://localhost:5000.
 
------
+Step 3: Frontend Setup (Terminal 2)
+Open a new, separate terminal window.
 
-### 2\. Frontend (Client) Setup
+Make sure you are in the project's root folder (the one containing src, server, and package.json).
 
-1.  From the project's **root directory** (`paperboy-main - Copy/`), install the client dependencies:
-    ```bash
-    npm install
-    ```
-2.  Run the client development server:
-    ```bash
-    npm run dev
-    ```
-    The React application will be available at `http://localhost:5173` (or a similar port).
+Install all required frontend dependencies (including react, axios, etc.):
 
+Bash
+
+npm install
+Start the frontend development server:
+
+Bash
+
+npm run dev
+The React app should now be running on http://localhost:5173 (or the next available port).
 ## API Endpoints
 
 The backend server (`http://localhost:5000`) provides the following endpoints:
