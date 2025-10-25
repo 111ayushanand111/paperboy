@@ -1,0 +1,338 @@
+.pageContainer {
+  width: 90%;
+  max-width: 1200px;
+  margin: 2rem auto;
+  color: white;
+}
+
+.loading {
+  color: white;
+  text-align: center;
+  margin-top: 5rem;
+  font-size: 1.5rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.category {
+  font-size: 1rem;
+  color: #a1a1aa;
+  margin-bottom: 2rem;
+  text-transform: capitalize;
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem; /* Add space below graph/vote */
+}
+
+.graphContainer {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+  height: 500px;
+}
+
+.tradeContainer {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tradeTitle {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* --- Styles for Voting Buttons --- */
+
+.yesNoContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.yesButton,
+.noButton {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.yesButton {
+  background-color: #0d9488;
+  color: white;
+  border-color: #14B8A6;
+}
+.yesButton.selected {
+  box-shadow: 0 0 15px #14B8A6;
+  transform: scale(1.03);
+}
+
+.noButton {
+  background-color: #dc2626;
+  color: white;
+  border-color: #f87171;
+}
+.noButton.selected {
+  box-shadow: 0 0 15px #f87171;
+  transform: scale(1.03);
+}
+
+.multiOptionContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.optionButton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 2px solid #374151;
+  background-color: #1e293b;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.optionButton:hover {
+  background-color: #374151;
+}
+
+.optionButton.selected {
+  background-color: #60a5fa;
+  border-color: #60a5fa;
+  color: #0f172a;
+  transform: scale(1.02);
+}
+
+.tradeButton {
+  margin-top: 1.5rem;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background-color: #00b4d8;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.tradeButton:hover {
+  background-color: #0096b4;
+}
+
+/* --- Styles for Info Container (News & Rules) --- */
+
+.infoContainer {
+  margin-top: 3rem;
+  display: grid;
+  grid-template-columns: 1fr; /* Single column */
+  gap: 2rem; /* Space between news and rules */
+}
+
+.rules, .news {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.rules h3, .news h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin-bottom: 1.25rem;
+}
+
+/* Rules Specific */
+.rules p {
+  color: #9ca3af;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* News Specific */
+.newsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.newsItem {
+  background-color: #1e293b;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  border: 1px solid #374151;
+}
+
+.newsItem:hover {
+  background-color: #374151;
+}
+
+.newsItemLink {
+  display: block;
+  padding: 14px 18px;
+  text-decoration: none;
+  color: #cbd5e1;
+}
+
+.newsSource {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.newsTitle {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #e5e7eb;
+}
+
+.newsLoading,
+.newsNotFound {
+  color: #64748b;
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+/* General Link Style (for 'Read Source' and 'Search Google') */
+.newsLink {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.newsLink:hover {
+  text-decoration: underline;
+}
+
+/* Adjust Google link margin specifically */
+.news a.newsLink {
+   margin-top: 1.5rem; /* More space above Google link */
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 900px) {
+  .mainContent {
+    grid-template-columns: 1fr;
+  }
+  .infoContainer {
+    /* Already single column, no change needed here */
+    margin-top: 2rem; /* Reduce top margin slightly */
+  }
+  .rules, .news {
+     padding: 16px; /* Reduce padding */
+  }
+}
+
+/* --- Styles for Bet Amount Input --- */
+.betAmountContainer {
+  margin-top: 1.5rem; /* Space above input */
+  margin-bottom: 1rem; /* Space below input */
+}
+
+.betAmountLabel {
+  display: block;
+  font-size: 0.9rem;
+  color: #a1a1aa; /* Muted label color */
+  margin-bottom: 0.5rem;
+}
+
+.betAmountInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  background-color: #0f172a; /* Dark background */
+  color: white;
+  font-size: 1rem;
+  box-sizing: border-box; /* Include padding in width */
+  outline: none;
+}
+
+.betAmountInput:focus {
+  border-color: #60a5fa; /* Highlight on focus */
+}
+
+/* --- Styles for Bet Status Feedback --- */
+.betStatus {
+  margin-top: 0.5rem; /* Space above status */
+  margin-bottom: 1rem; /* Space below status */
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.betStatus.loading {
+  background-color: #3b82f6; /* Blue for loading */
+  color: white;
+}
+
+.betStatus.success {
+  background-color: #16a34a; /* Green for success */
+  color: white;
+}
+
+.betStatus.error {
+  background-color: #dc2626; /* Red for error */
+  color: white;
+}
+
+/* --- Adjustments for Submit Button --- */
+.tradeButton {
+  margin-top: 0; /* Remove top margin if status message provides space */
+  /* Add disabled styles */
+  opacity: 1;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.tradeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #374151; /* Grey out when disabled */
+}
+
+/* --- Ensure correct spacing overall in trade container --- */
+.tradeContainer {
+  /* Existing styles... */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Helps push button down if content is short */
+}
+
+.yesNoContainer, .multiOptionContainer {
+    margin-bottom: 1rem; /* Add space below options before input */
+}

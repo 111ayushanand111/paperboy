@@ -1,0 +1,163 @@
+/* src/pages/Profile.module.css */
+
+.profileContainer {
+  width: 90%;
+  max-width: 900px; /* Constrain width for better readability */
+  margin: 2rem auto;
+  color: #e5e7eb; /* Light text color */
+  display: grid;
+  gap: 2rem; /* Space between cards */
+}
+
+/* General Card Styling */
+.card {
+  background: #111c33; /* Dark blue background */
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: white; /* Ensure title is white */
+  border-bottom: 1px solid #374151; /* Separator line */
+  padding-bottom: 0.75rem;
+}
+
+/* User Info Card Specifics */
+.userInfoCard {
+    text-align: center;
+}
+
+.avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid #00b4d8; /* Teal border */
+    margin: 0 auto 1rem auto; /* Center avatar */
+    display: block;
+}
+
+.username {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  color: white;
+}
+
+.email {
+  color: #a1a1aa; /* Muted email color */
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.points {
+  color: #14b8a6; /* Teal points color */
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Stats Card Specifics */
+.statItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  color: #cbd5e1; /* Slightly lighter gray */
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #1e293b; /* Subtle separator */
+}
+.statItem:last-of-type {
+    margin-bottom: 1.25rem; /* More space before progress bar */
+    border-bottom: none;
+}
+
+.accuracyValue {
+  color: #00b4d8; /* Teal accuracy */
+  font-weight: 600;
+}
+
+.progressBarBackground {
+  background: #1e293b;
+  border-radius: 8px;
+  height: 10px;
+  overflow: hidden; /* Ensure fill stays within bounds */
+}
+
+.progressBarFill {
+  background: #00b4d8;
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.6s ease;
+}
+
+/* Leaderboard Card Specifics */
+.leaderboardCard {
+    /* Span across columns if using multi-column layout later */
+    /* grid-column: 1 / -1; */
+}
+
+.leaderboardTable {
+  width: 100%;
+  border-collapse: collapse;
+  color: #e5e7eb;
+}
+
+.leaderboardTable th,
+.leaderboardTable td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #1e293b;
+}
+
+.leaderboardTable th {
+  font-weight: 600;
+  color: #a1a1aa; /* Muted header color */
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.leaderboardTable tbody tr:nth-child(even) {
+  background-color: #0f172a; /* Slightly darker row */
+}
+
+.leaderboardTable td:first-child { /* Rank column */
+    font-weight: bold;
+    color: #a1a1aa;
+    width: 10%; /* Give rank a fixed width */
+    text-align: center;
+}
+.leaderboardTable td:last-child { /* Accuracy column */
+    text-align: right;
+    width: 25%;
+}
+
+.noLeaderboard {
+    color: #64748b;
+    font-style: italic;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+
+/* Loading / Error Messages */
+.message {
+  color: white;
+  text-align: center;
+  margin-top: 5rem;
+  font-size: 1.2rem;
+  padding: 2rem;
+  background: #111c33;
+  border-radius: 12px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.message.error {
+    background-color: #441c22; /* Dark red background for errors */
+    color: #f87171; /* Lighter red text */
+    border: 1px solid #dc2626;
+}

@@ -1,0 +1,85 @@
+/* src/components/PredictionCard.module.css */
+
+/* 1. Add this new style for the link */
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 2. Add a hover effect to the link */
+.cardLink:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 180, 216, 0.2);
+}
+
+.card {
+  background-color: #0f172a; 
+  border: 1px solid #1e293b;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 150px; 
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.optionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto; 
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.optionName {
+  font-size: 1rem;
+  flex-grow: 1;
+  word-break: break-word;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.percentage {
+  color: #9CA3AF;
+  font-weight: bold;
+}
+
+/* 3. We can remove the button styles since they are gone */
+/*
+.choiceButton { ... }
+.yesButton { ... }
+.noButton { ... }
+*/

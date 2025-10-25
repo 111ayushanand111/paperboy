@@ -1,0 +1,174 @@
+/* src/components/Header.module.css */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  color: #D1D5DB;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.searchContainer {
+  position: relative;
+  flex-grow: 1;
+  max-width: 700px;
+  margin: 0 1rem;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+}
+
+.searchInput {
+  width: 100%;
+  background-color: #1A2E2C;
+  border: 1px solid #4B5563;
+  border-radius: 0.5rem;
+  padding: 0.5rem 2.5rem;
+  color: white;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #14B8A6;
+}
+
+.authLinks {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  font-size: 1.125rem;
+}
+
+.authLinks a:hover {
+  color: white;
+}
+.link {
+  color: white;
+  text-decoration: none;
+  margin-left: 1rem;
+  transition: color 0.3s ease;
+}
+
+.link:hover {
+  color: #00b4d8;
+}
+
+.logoutBtn {
+  color: white;
+  background: transparent;
+  border: 1px solid #00b4d8;
+  border-radius: 5px;
+  padding: 6px 12px;
+  margin-left: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logoutBtn:hover {
+  background: #00b4d8;
+  color: #0b1625;
+}
+
+.userMenu {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #00b4d8;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.1);
+}
+/* ... other styles ... */
+
+.userMenu {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem; /* Increased gap */
+}
+
+.userPoints {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9ca3af; /* Muted color */
+  font-weight: 500;
+}
+
+.userPoints svg { /* Style the icon */
+    font-size: 1.2em;
+    color: #14b8a6; /* Teal color for icon */
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #00b4d8;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.1);
+}
+
+.profileIcon {
+    line-height: 0; /* Align image nicely */
+}
+
+/* Styles for Search Dropdown */
+.resultsDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #111c33;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  margin-top: 6px;
+  padding: 8px 0;
+  list-style: none;
+  z-index: 999;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.resultsItem {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #1e293b;
+  color: white;
+  font-size: 0.9rem;
+}
+.resultsItem:last-child {
+    border-bottom: none;
+}
+
+.resultsItem:hover {
+  background-color: #1e293b;
+}
+
+.resultsSource {
+  color: #00b4d8;
+  font-size: 0.8rem;
+  margin-left: 5px;
+}

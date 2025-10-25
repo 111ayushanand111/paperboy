@@ -1,0 +1,35 @@
+/* src/components/CategoryNav.module.css */
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #374151;
+}
+
+.categoryButton {
+  padding: 0.5rem 1.5rem;
+  background-color: #042F2C;
+  color: #D1D5DB;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+}
+
+.categoryButton:hover {
+  background-color: #0D9488;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* ✅ Highlight active category */
+.active {
+  background-color: #14B8A6; /* teal highlight */
+  color: #0f172a;            /* dark text for contrast */
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(20, 184, 166, 0.6);
+}

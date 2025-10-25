@@ -1,0 +1,120 @@
+/* src/pages/Register.module.css */
+
+.pageContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh; /* Center vertically */
+  padding: 2rem;
+  color: #e5e7eb;
+}
+
+.formCard {
+  background: #111c33; /* Dark blue background */
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  width: 100%;
+  max-width: 450px; /* Limit card width */
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+}
+
+.title {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem; /* Space between input groups */
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #a1a1aa;
+  margin-bottom: 0.5rem;
+}
+
+.input {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  background-color: #0f172a; /* Darker input background */
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input::placeholder {
+    color: #4b5563;
+}
+
+.input:focus {
+  border-color: #60a5fa; /* Blue highlight on focus */
+}
+
+.message {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 0.5rem; /* Space above message */
+  margin-bottom: 0; /* Reset bottom margin */
+}
+
+.message.success {
+  background-color: #166534; /* Dark green */
+  color: #a7f3d0; /* Light green text */
+  border: 1px solid #15803d;
+}
+
+.message.error {
+  background-color: #441c22; /* Dark red */
+  color: #fecaca; /* Light red text */
+  border: 1px solid #b91c1c;
+}
+
+.submitButton {
+  margin-top: 1rem; /* Space above button */
+  padding: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background-color: #00b4d8; /* Teal button */
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submitButton:hover {
+  background-color: #0096b4; /* Darker teal on hover */
+}
+
+.loginLink {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #a1a1aa;
+}
+
+.loginLink a {
+  color: #60a5fa; /* Blue link */
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.loginLink a:hover {
+  text-decoration: underline;
+}
