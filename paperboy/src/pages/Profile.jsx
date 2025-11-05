@@ -1,145 +1,133 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import Header from "../components/Header"; // Import Header
-import styles from "./Profile.module.css"; // Import the CSS module
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useOutletContext } from 'react-router-dom'; // Import useOutletContext
+import styles from './Profile.module.css';
 
-export default function Profile() {
-  const [user, setUser] = useState(null);
+const API_URL = 'http://localhost:5000/api';
+
+function Profile() {
+  const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState({ attempted: 0, correct: 0 });
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(""); // State for error messages
+  const [error, setError] = useState('');
+
+  // Get setUser from the App.jsx layout
+  const { setUser } = useOutletContext();
 
   useEffect(() => {
     const fetchProfile = async () => {
-      setError(""); // Clear previous errors
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setError("Not logged in. Please log in to view your profile.");
-          setLoading(false);
-          return;
-        }
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('No token found. Please login.');
+        setLoading(false);
+        return;
+      }
 
-        const res = await axios.get("http://localhost:5000/api/profile", {
+      try {
+        const { data } = await axios.get(`${API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (res.data && res.data.user) {
-          setUser(res.data.user);
-          setStats(res.data.stats || { attempted: 0, correct: 0 }); // Use default if stats missing
-          setLeaderboard(res.data.leaderboard || []); // Use default if leaderboard missing
-        } else {
-            throw new Error("Invalid profile data received.");
+        // Set local state for this page
+        setProfile(data.user);
+        setStats(data.stats);
+        setLeaderboard(data.leaderboard);
+        
+        // --- THIS IS THE FIX ---
+        // Update the main App.jsx state, which updates the Header
+        if (setUser) {
+          setUser(data.user);
         }
+        // --- END FIX ---
 
       } catch (err) {
-        console.error("Error fetching profile:", err);
-        const message = err.response?.data?.message || err.message || "Could not load profile data.";
-        // Handle specific auth errors
-        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-            setError("Session expired or invalid. Please log in again.");
-            // Optionally clear token here: localStorage.removeItem("token");
-        } else {
-             setError(message);
+        console.error('Error fetching profile:', err);
+        setError('Failed to fetch profile.');
+        localStorage.removeItem('token'); // Clear bad token
+        if (setUser) {
+          setUser(null); // Tell App.jsx we are logged out
         }
-        setUser(null); // Clear user data on error
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
 
     fetchProfile();
-  }, []); // Run only once on component mount
+  }, [setUser]); // Add setUser as a dependency
 
-  // Calculate accuracy only if user and stats are loaded
-  const accuracy = (user && stats.attempted > 0)
-    ? ((stats.correct / stats.attempted) * 100).toFixed(1)
-    : 0;
+  if (loading) return <p>Loading profile...</p>;
+  if (error) return <p className={styles.error}>{error}</p>;
+  if (!profile) return <p>No profile data found.</p>;
 
-  // --- Render Logic ---
-
-  if (loading) {
-    return <div className={styles.message}>Loading profile...</div>;
-  }
-
-  if (error) {
-     return <div className={`${styles.message} ${styles.error}`}>{error}</div>;
-  }
-
-  // Should only reach here if loading is false, error is empty, and user is loaded
-  if (!user) {
-      // This case might occur if the API call finishes without error but user is still null (unexpected)
-      return <div className={`${styles.message} ${styles.error}`}>Could not load user data. Please try logging in again.</div>;
-  }
-
+  const accuracy =
+    stats.attempted > 0 ? (stats.correct / stats.attempted) * 100 : 0;
+  
+  // Find current user's rank
+  const userRank = leaderboard.findIndex(p => p.username === profile.username) + 1;
 
   return (
-    <>
-      <Header /> {/* Include Header for consistent navigation */}
-      <div className={styles.profileContainer}>
-        {/* User Info Card */}
-        <div className={`${styles.card} ${styles.userInfoCard}`}>
-           <img src="/profile.png" alt="User Avatar" className={styles.avatar} />
-          <h2 className={styles.username}>{user.username}</h2>
-          <p className={styles.email}>{user.email}</p>
-          <p className={styles.points}>
-             💰 {user.points !== undefined ? user.points.toLocaleString() : '0'} Points
-          </p>
-        </div>
+    <div className={styles.profileContainer}>
+      <div className={styles.profileHeader}>
+        <h1>{profile.username}'s Profile</h1>
+        <p>Email: {profile.email}</p>
+        <p>Points: {profile.points}</p>
+      </div>
 
-        {/* Stats Card */}
-        <div className={styles.card}>
-          <h3 className={styles.cardTitle}>📊 Quiz Stats</h3>
-          <div className={styles.statItem}>
-            <span>Questions Attempted:</span>
-            <span>{stats.attempted}</span>
+      <div className={styles.statsContainer}>
+        <h2>Your Stats</h2>
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <h3>Total Markets</h3>
+            <p>{stats.attempted}</p>
           </div>
-          <div className={styles.statItem}>
-            <span>Correct Answers:</span>
-            <span>{stats.correct}</span>
+          <div className={styles.statCard}>
+            <h3>Correct Bets</h3>
+            <p>{stats.correct}</p>
           </div>
-          <div className={styles.statItem}>
-            <span>Accuracy:</span>
-            <span className={styles.accuracyValue}>{accuracy}%</span>
+          <div className={styles.statCard}>
+            <h3>Your Rank</h3>
+            <p>#{userRank > 0 ? userRank : 'N/A'}</p>
           </div>
-          {/* Progress bar */}
-          <div className={styles.progressBarBackground}>
+        </div>
+        <div className={styles.accuracy}>
+          <h3>Accuracy</h3>
+          <div className={styles.progressBar}>
             <div
-              className={styles.progressBarFill}
+              className={styles.progressFill}
               style={{ width: `${accuracy}%` }}
             ></div>
           </div>
-        </div>
-
-        {/* Leaderboard Card */}
-        <div className={`${styles.card} ${styles.leaderboardCard}`}>
-          <h3 className={styles.cardTitle}>🏆 Global Leaderboard</h3>
-          {leaderboard.length > 0 ? (
-            <table className={styles.leaderboardTable}>
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>User</th>
-                  <th>Accuracy</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaderboard.map((u, i) => (
-                  <tr key={i}>
-                    <td>{i + 1}</td>
-                    <td>{u.username}</td>
-                    <td className={styles.accuracyValue}>{u.accuracy.toFixed(1)}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className={styles.noLeaderboard}>Leaderboard data not available.</p>
-          )}
+          <p>{accuracy.toFixed(2)}%</p>
         </div>
       </div>
-    </>
+
+      <div className={styles.leaderboard}>
+        <h2>Leaderboard</h2>
+        <table className={styles.leaderboardTable}>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>User</th>
+              <th>Accuracy</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leaderboard.map((p, index) => (
+              <tr 
+                key={index} 
+                // Highlight the current user
+                className={p.username === profile.username ? styles.currentUser : ''}
+              >
+                <td>#{index + 1}</td>
+                <td>{p.username}</td>
+                <td>{p.accuracy.toFixed(2)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
+
+export default Profile;

@@ -1,110 +1,99 @@
-import { useState } from "react";
-import axios from "axios";
-import { useNavigate, Link } from "react-router-dom"; // Import useNavigate and Link
-import Header from "../components/Header"; // Optional: Add Header
-import styles from "./Register.module.css"; // Import CSS Module
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import styles from './Register.module.css'; // Shared styles
+import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa'; // Import icons
 
-export default function Register() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState(""); // 'success' or 'error'
-  const navigate = useNavigate(); // Hook for navigation
+const API_URL = 'http://localhost:5000/api';
+
+function Register() {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage(""); // Clear previous message
-    setMessageType("");
-
-    // Basic validation
-    if (password.length < 6) {
-        setMessage("Password must be at least 6 characters long.");
-        setMessageType("error");
-        return;
-    }
-
+    setError('');
     try {
-      const res = await axios.post("http://localhost:5000/api/register", {
+      await axios.post(`${API_URL}/register`, {
         username,
         email,
         password,
       });
-      setMessage("✅ Registered successfully! Redirecting to login...");
-      setMessageType("success");
-
-      // --- Redirect after a short delay ---
-      setTimeout(() => {
-        navigate("/login"); // Navigate to the login page
-      }, 1500); // 1.5 second delay
-
+      navigate('/login');
     } catch (err) {
-      const errorMsg = err.response?.data?.message || "Registration failed. Please try again.";
-      setMessage(`❌ ${errorMsg}`);
-      setMessageType("error");
+      console.error('Registration error:', err);
+      setError(
+        err.response?.data?.message || 'Registration failed. Please try again.'
+      );
     }
   };
 
   return (
-    <>
-      {/* Optional: <Header /> */}
-      <div className={styles.pageContainer}>
-        <div className={styles.formCard}>
-          <h2 className={styles.title}>Create Account</h2>
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.inputGroup}>
-              <label htmlFor="username" className={styles.label}>Username</label>
-              <input
-                type="text"
-                id="username"
-                className={styles.input}
-                placeholder="Choose a username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <label htmlFor="email" className={styles.label}>Email</label>
-              <input
-                type="email"
-                id="email"
-                className={styles.input}
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <label htmlFor="password" className={styles.label}>Password</label>
-              <input
-                type="password"
-                id="password"
-                className={styles.input}
-                placeholder="Create a password (min. 6 chars)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+    <div className={styles.authContainer}>
+      <form className={styles.authForm} onSubmit={handleSubmit}>
+        <h2>Create an Account</h2>
+        <p className={styles.subtitle}>Start your gamified news journey!</p>
 
-            {/* Display Message */}
-            {message && (
-              <p className={`${styles.message} ${styles[messageType]}`}>
-                {message}
-              </p>
-            )}
+        {error && <p className={styles.error}>{error}</p>}
 
-            <button type="submit" className={styles.submitButton}>
-              Register
-            </button>
-          </form>
-          <p className={styles.loginLink}>
-            Already have an account? <Link to="/login">Log In</Link>
-          </p>
+        <div className={styles.inputGroup}>
+          <label htmlFor="username">Username</label>
+          <div className={styles.inputWrapper}>
+            <FaUser className={styles.inputIcon} />
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Your Username"
+              required
+            />
+          </div>
         </div>
-      </div>
-    </>
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="email">Email</label>
+          <div className={styles.inputWrapper}>
+            <FaEnvelope className={styles.inputIcon} />
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="password">Password</label>
+          <div className={styles.inputWrapper}>
+            <FaLock className={styles.inputIcon} />
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+        </div>
+
+        <button type="submit" className={styles.authButton}>
+          Create Account
+        </button>
+
+        <p className={styles.redirect}>
+          Already have an account? <Link to="/login">Login here</Link>
+        </p>
+      </form>
+    </div>
   );
 }
+
+export default Register;

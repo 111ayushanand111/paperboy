@@ -1,163 +1,154 @@
-/* src/pages/Profile.module.css */
-
 .profileContainer {
-  width: 90%;
-  max-width: 900px; /* Constrain width for better readability */
-  margin: 2rem auto;
-  color: #e5e7eb; /* Light text color */
+  padding: 2rem 0;
+  color: rgba(255, 255, 255, 0.87);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.profileHeader {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.profileHeader h1 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.profileHeader p {
+  font-size: 1.1rem;
+  color: #aaa;
+  margin: 0.5rem 0;
+}
+
+.statsContainer {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.statsContainer h2,
+.leaderboard h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.75rem;
+}
+
+.statsGrid {
   display: grid;
-  gap: 2rem; /* Space between cards */
-}
-
-/* General Card Styling */
-.card {
-  background: #111c33; /* Dark blue background */
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.cardTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 1.5rem;
-  color: white; /* Ensure title is white */
-  border-bottom: 1px solid #374151; /* Separator line */
-  padding-bottom: 0.75rem;
 }
 
-/* User Info Card Specifics */
-.userInfoCard {
-    text-align: center;
+.statCard {
+  background-color: #242424;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px solid #333;
 }
 
-.avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    border: 3px solid #00b4d8; /* Teal border */
-    margin: 0 auto 1rem auto; /* Center avatar */
-    display: block;
-}
-
-.username {
-  font-size: 1.75rem;
-  font-weight: bold;
-  margin-bottom: 0.25rem;
-  color: white;
-}
-
-.email {
-  color: #a1a1aa; /* Muted email color */
-  font-size: 0.95rem;
-  margin-bottom: 1rem;
-}
-
-.points {
-  color: #14b8a6; /* Teal points color */
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-/* Stats Card Specifics */
-.statItem {
-  display: flex;
-  justify-content: space-between;
+.statCard h3 {
+  margin-top: 0;
   font-size: 1rem;
-  color: #cbd5e1; /* Slightly lighter gray */
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #1e293b; /* Subtle separator */
-}
-.statItem:last-of-type {
-    margin-bottom: 1.25rem; /* More space before progress bar */
-    border-bottom: none;
+  color: #888;
+  text-transform: uppercase;
 }
 
-.accuracyValue {
-  color: #00b4d8; /* Teal accuracy */
+.statCard p {
+  font-size: 2.5rem;
   font-weight: 600;
+  color: #646cff;
+  margin: 0;
 }
 
-.progressBarBackground {
-  background: #1e293b;
-  border-radius: 8px;
-  height: 10px;
-  overflow: hidden; /* Ensure fill stays within bounds */
+.accuracy h3 {
+  text-align: center;
+  margin-bottom: 0.5rem;
 }
 
-.progressBarFill {
-  background: #00b4d8;
+.accuracy p {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.progressBar {
+  width: 100%;
+  height: 20px;
+  background-color: #242424;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+
+.progressFill {
   height: 100%;
-  border-radius: 8px;
-  transition: width 0.6s ease;
+  background-color: #646cff;
+  transition: width 0.5s ease-in-out;
+  border-radius: 10px 0 0 10px;
 }
 
-/* Leaderboard Card Specifics */
-.leaderboardCard {
-    /* Span across columns if using multi-column layout later */
-    /* grid-column: 1 / -1; */
+.error {
+  color: #f87171;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+/* --- New Leaderboard Styles --- */
+.leaderboard {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .leaderboardTable {
   width: 100%;
   border-collapse: collapse;
-  color: #e5e7eb;
+  margin-top: 1rem;
 }
 
 .leaderboardTable th,
 .leaderboardTable td {
-  padding: 12px 16px;
+  padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid #333;
 }
 
 .leaderboardTable th {
-  font-weight: 600;
-  color: #a1a1aa; /* Muted header color */
   font-size: 0.9rem;
+  color: #888;
   text-transform: uppercase;
 }
 
-.leaderboardTable tbody tr:nth-child(even) {
-  background-color: #0f172a; /* Slightly darker row */
+.leaderboardTable td {
+  font-size: 1.1rem;
 }
 
-.leaderboardTable td:first-child { /* Rank column */
-    font-weight: bold;
-    color: #a1a1aa;
-    width: 10%; /* Give rank a fixed width */
-    text-align: center;
-}
-.leaderboardTable td:last-child { /* Accuracy column */
-    text-align: right;
-    width: 25%;
+.leaderboardTable tr:last-child td {
+  border-bottom: none;
 }
 
-.noLeaderboard {
-    color: #64748b;
-    font-style: italic;
-    text-align: center;
-    padding: 1rem 0;
+.leaderboardTable tr:hover {
+  background-color: #242424;
 }
 
-
-/* Loading / Error Messages */
-.message {
-  color: white;
-  text-align: center;
-  margin-top: 5rem;
-  font-size: 1.2rem;
-  padding: 2rem;
-  background: #111c33;
-  border-radius: 12px;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
+.currentUser {
+  background-color: rgba(100, 108, 255, 0.1);
+  font-weight: bold;
+  color: #fff;
 }
-.message.error {
-    background-color: #441c22; /* Dark red background for errors */
-    color: #f87171; /* Lighter red text */
-    border: 1px solid #dc2626;
+
+.currentUser td:first-child {
+  border-left: 3px solid #646cff;
 }

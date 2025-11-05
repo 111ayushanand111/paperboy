@@ -1,60 +1,97 @@
-// src/App.jsx
-import './index.css';
-import styles from './App.module.css';
-
+import { useState, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import Header from './components/Header';
-import CategoryNav from './components/CategoryNav';
+import styles from './App.module.css';
 import NewsCarousel from './components/NewsCarousel';
-// 1. Import PredictionCard instead of PollCard
-import PredictionCard from './components/PredictionCard';
+import CategoryNav from './components/CategoryNav';
 
-import { useEffect, useState } from "react";
-import axios from "axios";
+const API_URL = 'http://localhost:5000/api';
 
 function App() {
   const [questions, setQuestions] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState('trending');
+  const [user, setUser] = useState(undefined); // Start as undefined to track loading
+  const location = useLocation();
 
-  // ✅ Fetch polls by category
-  const fetchQuestions = async (category = "all") => {
-    try {
-      const res = await axios.get(
-        `http://localhost:5000/api/questions?category=${category}`
-      );
-      setQuestions(res.data);
-      setActiveCategory(category);
-    } catch (err) {
-      console.error("Error fetching questions:", err);
+  const isHomePage = location.pathname === '/';
+
+  // Fetch user profile if token exists
+  const fetchUserProfile = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const { data } = await axios.get(`${API_URL}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(data.user); // Set the user object
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        localStorage.removeItem('token'); // Invalid token, remove it
+        setUser(null); // Set to null (not logged in)
+      }
+    } else {
+      setUser(null); // No token, not logged in
     }
   };
 
-  // ✅ Load all polls initially
+  // Fetch user on initial load
   useEffect(() => {
-    fetchQuestions();
+    fetchUserProfile();
   }, []);
 
+  // Fetch questions when category changes (only on home page)
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      setLoading(true);
+      try {
+        const { data } = await axios.get(
+          `${API_URL}/questions?category=${category}`
+        );
+        setQuestions(data);
+      } catch (err) {
+        console.error('Error fetching questions:', err);
+      }
+      setLoading(false);
+    };
+
+    if (isHomePage) {
+      fetchQuestions();
+    } else {
+      setQuestions([]); // Clear questions if not on home page
+      setLoading(false); // Stop loading
+    }
+  }, [category, isHomePage]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
+  // Pass user, setUser, questions, and loading state to all child routes
+  const contextValue = { user, setUser, questions, loading };
+
   return (
-    <div className={styles.container}>
-      <Header />
-      <CategoryNav onCategorySelect={fetchQuestions} activeCategory={activeCategory} />
-      <NewsCarousel />
-
-      <section className={styles.predictionsSection}>
-        <h2 style={{ color: "white", margin: "20px 0" }}></h2>
-
-        {/* 2. Use the "predictionsGrid" style from your CSS file */}
-        <div className={styles.predictionsGrid}>
-          {questions.length > 0 ? (
-            // 3. Render <PredictionCard> instead of <PollCard>
-            questions.map((q) => <PredictionCard key={q._id} question={q} />)
-          ) : (
-            <p style={{ color: "gray", fontSize: "1.1rem" }}>
-              No questions found in this category.
-            </p>
-          )}
+    <>
+      <Header user={user} onLogout={handleLogout} />
+      <main>
+        {isHomePage && (
+          <>
+            <NewsCarousel />
+            <CategoryNav
+              currentCategory={category}
+              onSelectCategory={setCategory}
+            />
+          </>
+        )}
+        <div className={styles.container}>
+          {/* Outlet renders the correct child page (Home, Login, MarketDetail, etc.) */}
+          {/* We pass the context to all of them */}
+          <Outlet context={contextValue} />
         </div>
-      </section>
-    </div>
+      </main>
+    </>
   );
 }
 

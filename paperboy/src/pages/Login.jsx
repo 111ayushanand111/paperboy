@@ -1,109 +1,86 @@
-import { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
+import axios from 'axios';
+import styles from './Register.module.css'; // Use shared styles
+import { FaEnvelope, FaLock } from 'react-icons/fa'; // Import icons
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+const API_URL = 'http://localhost:5000/api';
+
+function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { setUser } = useOutletContext(); // Get setUser from App.jsx layout
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const res = await axios.post("http://localhost:5000/api/login", {
-        email,
-        password,
+      const { data } = await axios.post(`${API_URL}/login`, { email, password });
+      localStorage.setItem('token', data.token);
+
+      // Fetch user profile after login to set user state in App.jsx
+      const { data: profileData } = await axios.get(`${API_URL}/profile`, {
+        headers: { Authorization: `Bearer ${data.token}` },
       });
+      setUser(profileData.user); // Set the global user state
 
-      // ✅ Save token and username
-      localStorage.setItem("token", res.data.token);
-      if (res.data.username) {
-        localStorage.setItem("username", res.data.username);
-      }
-
-      setMessage("✅ Logged in successfully!");
-
-      // ✅ Redirect to homepage (or profile)
-      setTimeout(() => {
-        navigate("/profile");
-      }, 1000);
+      navigate('/profile');
     } catch (err) {
-      const msg = err.response?.data?.message || "Login failed";
-      setMessage("❌ " + msg);
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
     }
   };
 
   return (
-    <div
-      style={{
-        color: "white",
-        textAlign: "center",
-        marginTop: "5rem",
-        fontSize: "1.1rem",
-      }}
-    >
-      <h2>Login</h2>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "inline-block",
-          textAlign: "left",
-          background: "#111c33",
-          padding: "20px",
-          borderRadius: "10px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-        }}
-      >
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{
-            margin: "10px",
-            padding: "8px",
-            width: "250px",
-            borderRadius: "5px",
-            border: "none",
-            outline: "none",
-          }}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{
-            margin: "10px",
-            padding: "8px",
-            width: "250px",
-            borderRadius: "5px",
-            border: "none",
-            outline: "none",
-          }}
-        />
-        <div style={{ textAlign: "center" }}>
-          <button
-            type="submit"
-            style={{
-              marginTop: "10px",
-              padding: "8px 20px",
-              cursor: "pointer",
-              background: "#00b4d8",
-              border: "none",
-              borderRadius: "5px",
-              color: "white",
-              fontWeight: "600",
-            }}
-          >
-            Login
-          </button>
+    <div className={styles.authContainer}>
+      <form className={styles.authForm} onSubmit={handleSubmit}>
+        <h2>Welcome Back</h2>
+        <p className={styles.subtitle}>Please enter your details to login.</p>
+
+        {error && <p className={styles.error}>{error}</p>}
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="email">Email</label>
+          <div className={styles.inputWrapper}>
+            <FaEnvelope className={styles.inputIcon} />
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+            />
+          </div>
         </div>
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="password">Password</label>
+          <div className={styles.inputWrapper}>
+            <FaLock className={styles.inputIcon} />
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+        </div>
+
+        <button type="submit" className={styles.authButton}>
+          Login
+        </button>
+
+        <p className={styles.redirect}>
+          Don't have an account? <Link to="/register">Register here</Link>
+        </p>
       </form>
-      <p style={{ marginTop: "1rem" }}>{message}</p>
     </div>
   );
 }
+
+export default Login;

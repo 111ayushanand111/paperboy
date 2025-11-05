@@ -34,7 +34,6 @@ mongoose
 app.get("/", (req, res) => res.send("Backend running..."));
 
 // --- NEW ROUTE: For News Carousel ---
-// Fetches general top headlines, which is allowed on the free plan.
 app.get("/api/top-headlines", async (req, res) => {
   try {
     const url = `https://newsapi.org/v2/top-headlines?country=us&pageSize=10&apiKey=${process.env.NEWS_API_KEY}`;
@@ -190,13 +189,11 @@ app.get("/api/generate-news", async (req, res) => {
 });
 
 // --- FIXED: Search News route ---
-// Now uses the /top-headlines endpoint with the 'q' param, which works on the free plan.
 app.get("/api/search-news", async (req, res) => {
   try {
     const query = req.query.q;
     if (!query) return res.status(400).json({ message: "Missing query" });
 
-    // --- CHANGED URL: Use /top-headlines instead of /everything ---
     const url = `https://newsapi.org/v2/top-headlines?country=us&q=${encodeURIComponent(
       query
     )}&pageSize=10&apiKey=${process.env.NEWS_API_KEY}`;
@@ -228,7 +225,6 @@ app.get("/api/related-news", async (req, res) => {
           return res.status(400).json({ message: "Missing category query" });
         }
         
-        // Use /top-headlines (works on free plan)
         const url = `https://newsapi.org/v2/top-headlines?country=us&category=${encodeURIComponent(
           category
         )}&pageSize=10&apiKey=${process.env.NEWS_API_KEY}`;
@@ -286,7 +282,7 @@ app.get("/api/profile", async (req, res) => {
     if (!token) return res.status(401).json({ message: "No token provided" });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password"); // Corrected to remove inclusion/exclusion mix
+    const user = await User.findById(decoded.id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const statsDoc = await UserStats.findOne({ userId: user._id });
@@ -419,7 +415,10 @@ app.post("/api/bet", async (req, res) => {
   }
 });
 
-// Admin Check Middleware
+//
+// --- THIS IS THE FIX ---
+// Admin Check Middleware MUST be defined before it is used.
+//
 const adminCheck = async (req, res, next) => {
   const token = req.body.token || req.headers["authorization"]?.split(" ")[1];
   if (!token) return res.status(401).json({ message: "No token provided, authorization denied" });
@@ -437,10 +436,74 @@ const adminCheck = async (req, res, next) => {
   }
 };
 
+// --- NEW ADMIN ROUTE: Get ALL polls for dashboard ---
+app.get("/api/admin/polls", adminCheck, async (req, res) => {
+  try {
+    // Fetches all polls, newest first
+    const polls = await Question.find().sort({ createdAt: -1 });
+    res.json(polls);
+  } catch (err) {
+    console.error("❌ Error fetching all polls for admin:", err.message);
+    res.status(500).json({ message: "Failed to fetch polls" });
+  }
+});
+
+// --- NEW ADMIN ROUTE: Create a new poll ---
+app.post("/api/admin/polls/create", adminCheck, async (req, res) => {
+  try {
+    const { title, category, articleUrl, options } = req.body;
+
+    // Validate options
+    if (!Array.isArray(options) || options.length < 2) {
+      return res.status(400).json({ message: "A poll must have at least 2 options." });
+    }
+
+    const totalPercentage = 100;
+    const initialPrice = Math.floor(totalPercentage / options.length);
+    let remainder = totalPercentage % options.length;
+
+    const processedOptions = options.map((opt, index) => {
+      let price = initialPrice;
+      if (remainder > 0) {
+        price += 1;
+        remainder -= 1;
+      }
+      return {
+        name: opt.name,
+        price: price, // Set initial "price"
+      };
+    });
+    
+    // Adjust last option to ensure sum is exactly 100
+    const sum = processedOptions.reduce((acc, opt) => acc + opt.price, 0);
+    if (sum !== 100) {
+        processedOptions[processedOptions.length - 1].price += (100 - sum);
+    }
+
+    const newQuestion = new Question({
+      title,
+      category: category.toLowerCase(),
+      articleUrl,
+      options: processedOptions,
+      resolvingOptionName: null,
+      priceHistory: [{ // Add initial state to history
+        prices: processedOptions.map(opt => ({ name: opt.name, price: opt.price }))
+      }]
+    });
+
+    await newQuestion.save();
+    res.status(201).json({ message: "Poll created successfully", poll: newQuestion });
+
+  } catch (err) {
+    console.error("❌ Error creating poll:", err.message);
+    res.status(500).json({ message: "Failed to create poll" });
+  }
+});
+
 // Resolve Market & Payout Winners
 app.post("/api/question/:id/resolve", adminCheck, async (req, res) => {
   try {
-    const { questionId } = req.params; // Corrected: get ID from params
+    const questionId = req.params.id; // Corrected: get ID from params
     const { winningOptionName } = req.body;
     if (!winningOptionName) {
       return res.status(400).json({ message: "Winning option name is required" });
