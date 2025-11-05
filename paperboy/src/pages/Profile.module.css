@@ -1,7 +1,7 @@
 .profileContainer {
   padding: 2rem 0;
   color: rgba(255, 255, 255, 0.87);
-  max-width: 900px;
+  max-width: 1200px; /* Widen container for columns */
   margin: 0 auto;
 }
 
@@ -19,12 +19,22 @@
   color: #fff;
 }
 
+.headerDetails {
+  display: flex;
+  gap: 2rem;
+}
+
 .profileHeader p {
   font-size: 1.1rem;
   color: #aaa;
   margin: 0.5rem 0;
 }
 
+.profileHeader p:first-child {
+  margin-left: 0;
+}
+
+/* --- BRINGING STATS STYLES BACK --- */
 .statsContainer {
   background: #1a1a1a;
   border: 1px solid #333;
@@ -35,7 +45,8 @@
 }
 
 .statsContainer h2,
-.leaderboard h2 {
+.leaderboard h2,
+.betHistory h2 {
   margin-top: 0;
   border-bottom: 1px solid #333;
   padding-bottom: 0.75rem;
@@ -96,6 +107,8 @@
   transition: width 0.5s ease-in-out;
   border-radius: 10px 0 0 10px;
 }
+/* --- END OF STATS STYLES --- */
+
 
 .error {
   color: #f87171;
@@ -103,7 +116,20 @@
   text-align: center;
 }
 
-/* --- New Leaderboard Styles --- */
+/* --- Columns for Leaderboard & Bet History --- */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Leaderboard Styles --- */
 .leaderboard {
   background: #1a1a1a;
   border: 1px solid #333;
@@ -144,11 +170,70 @@
 }
 
 .currentUser {
-  background-color: rgba(100, 108, 255, 0.1);
+  background-color: rgba(100, 108, 255, 0.1) !important;
   font-weight: bold;
   color: #fff;
 }
 
 .currentUser td:first-child {
   border-left: 3px solid #646cff;
+}
+
+
+/* --- New Bet History Styles --- */
+.betHistory {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.betList {
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.betCard {
+  background-color: #242424;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #333;
+}
+
+.betTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+}
+.betTitle:hover {
+  color: #646cff;
+  text-decoration: underline;
+}
+
+.betCard p {
+  margin: 0.5rem 0;
+  color: #aaa;
+}
+
+.betResult {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+.correct {
+  color: #34d399; /* Green */
+}
+
+.incorrect {
+  color: #f87171; /* Red */
+}
+
+.pending {
+  color: #888; /* Muted */
+  font-style: italic;
 }

@@ -41,7 +41,9 @@ function App() {
     fetchUserProfile();
   }, []);
 
-  // Fetch questions when category changes (only on home page)
+  // --- THIS IS THE FIX ---
+  // This logic now *only* depends on the category.
+  // It will fetch polls and keep them, even when you navigate away.
   useEffect(() => {
     const fetchQuestions = async () => {
       setLoading(true);
@@ -56,13 +58,8 @@ function App() {
       setLoading(false);
     };
 
-    if (isHomePage) {
-      fetchQuestions();
-    } else {
-      setQuestions([]); // Clear questions if not on home page
-      setLoading(false); // Stop loading
-    }
-  }, [category, isHomePage]);
+    fetchQuestions();
+  }, [category]); // Only re-run when category changes
 
   const handleLogout = () => {
     localStorage.removeItem('token');

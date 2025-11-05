@@ -1,22 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import styles from './Header.module.css';
-// Import icons
 import { FaSearch, FaUserCircle, FaSignOutAlt, FaCrown } from 'react-icons/fa';
+
+const API_URL = 'http://localhost:5000/api';
 
 function Header({ user, onLogout }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const navigate = useNavigate();
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    console.log('Searching for:', query);
-    setResults([]);
-    setIsSearchFocused(false);
-    // navigate(`/search?q=${query}`); // You can build this page later
+  // --- THIS IS THE FIX ---
+  // This hook watches for changes in 'query'.
+  // When you stop typing for 300ms, it will run the search.
+  useEffect(() => {
+    // If the query is empty, clear results and don't do anything
+    if (!query.trim()) {
+      setResults([]);
+      setIsSearchLoading(false);
+      return;
+    }
+
+    // Set loading state
+    setIsSearchLoading(true);
+
+    // Set a timer for 300ms
+    const searchTimer = setTimeout(() => {
+      // After 300ms, run the search
+      axios.get(`${API_URL}/search-news?q=${query}`)
+        .then(res => {
+          setResults(res.data);
+          setIsSearchLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching search results:', err);
+          setResults([]); // Clear results on error
+          setIsSearchLoading(false);
+        });
+    }, 300); // 300ms debounce
+
+    // This is a cleanup function.
+    // If you type again, it cancels the previous timer.
+    return () => {
+      clearTimeout(searchTimer);
+    };
+  }, [query]); // This effect re-runs every time 'query' changes
+  // --- END FIX ---
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault(); // Prevent form from reloading page
+    // The useEffect above already handles the search
   };
 
   const handleLogoutClick = () => {
@@ -24,9 +60,24 @@ function Header({ user, onLogout }) {
     navigate('/');
   };
 
+  const handleFocus = () => setIsSearchFocused(true);
+  
+  // Use a timeout on blur to allow for clicks on results
+  const handleBlur = () => {
+    setTimeout(() => {
+      setIsSearchFocused(false);
+    }, 150); // 150ms delay
+  };
+  
+  // Clear results and query when a link is clicked
+  const handleResultClick = () => {
+    setQuery('');
+    setResults([]);
+    setIsSearchFocused(false);
+  };
+
   return (
     <header className={styles.header}>
-      {/* Use container class to match main content width */}
       <div className={`${styles.headerContent} container`}>
         <Link to="/" className={styles.logo}>
           📰 Paperboy
@@ -34,10 +85,11 @@ function Header({ user, onLogout }) {
 
         <div
           className={styles.searchContainer}
-          onFocus={() => setIsSearchFocused(true)}
-          onBlur={() => setIsSearchFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
         >
-          <form className={styles.searchBar} onSubmit={handleSearch}>
+          {/* Form now only prevents reload, search is handled by useEffect */}
+          <form className={styles.searchBar} onSubmit={handleSearchSubmit}>
             <input
               type="text"
               value={query}
@@ -48,26 +100,39 @@ function Header({ user, onLogout }) {
               <FaSearch />
             </button>
           </form>
-          {isSearchFocused && results.length > 0 && (
+          
+          {/* UPDATED RESULTS DROPDOWN */}
+          {isSearchFocused && query.length > 0 && (
             <div className={styles.searchResults}>
-              {results.map((result, index) => (
-                <a
-                  key={index}
-                  href={result.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {result.title}
-                </a>
-              ))}
+              {isSearchLoading ? (
+                <div className={styles.searchMessage}>Loading...</div>
+              ) : (
+                results.length > 0 ? (
+                  results.map((result, index) => (
+                    <a
+                      key={index}
+                      href={result.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.searchResultItem}
+                      onClick={handleResultClick}
+                    >
+                      {result.title}
+                      <span>{result.source}</span>
+                    </a>
+                  ))
+                ) : (
+                  <div className={styles.searchMessage}>No results found.</div>
+                )
+              )}
             </div>
           )}
+          {/* --- END UPDATED DROPDOWN --- */}
         </div>
 
         <nav className={styles.nav}>
           {user ? (
             <>
-              {/* ADMIN LINK - Only shows if user.role is 'admin' */}
               {user.role === 'admin' && (
                 <Link to="/admin" className={styles.navLink}>
                   <FaCrown />
