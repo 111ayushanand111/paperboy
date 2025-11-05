@@ -1,31 +1,41 @@
-// src/components/CategoryNav.jsx
-import styles from "./CategoryNav.module.css";
+import styles from './CategoryNav.module.css';
 
-const categories = [
-  { key: "all", label: "For you" },
-  { key: "trending", label: "Trending" },
-  { key: "politics", label: "Politics" },
-  { key: "science", label: "Science" },
-  { key: "sports", label: "Sports" },
-  { key: "technology", label: "Tech" },
-];
+const CATEGORIES = ['for you', 'trending', 'politics', 'science', 'sports', 'tech'];
 
-export default function CategoryNav({ onCategorySelect, activeCategory }) {
+function CategoryNav({ currentCategory, onSelectCategory }) {
+  
+  // This function translates the button text ("for you") 
+  // into the API parameter the server expects ("all").
+  const handleClick = (category) => {
+    if (category === 'for you') {
+      onSelectCategory('all');
+    } else {
+      onSelectCategory(category);
+    }
+  };
+
+  // This function highlights the correct button.
+  // It maps the "all" state back to the "for you" button.
+  const getActiveCategory = () => {
+    if (currentCategory === 'all') return 'for you';
+    return currentCategory;
+  };
+
   return (
     <nav className={styles.nav}>
-      <div className={styles.categories}>
-        {categories.map((cat) => (
-          <button
-            key={cat.key}
-            onClick={() => onCategorySelect(cat.key)}
-            className={`${styles.categoryButton} ${
-              activeCategory === cat.key ? styles.active : ""
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
+      {CATEGORIES.map((category) => (
+        <button
+          key={category}
+          // Use the new getActiveCategory() to check for active state
+          className={category === getActiveCategory() ? styles.active : ''}
+          // Use the new handleClick function
+          onClick={() => handleClick(category)}
+        >
+          {category}
+        </button>
+      ))}
     </nav>
   );
 }
+
+export default CategoryNav;

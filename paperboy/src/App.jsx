@@ -11,7 +11,7 @@ const API_URL = 'http://localhost:5000/api';
 function App() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState('trending');
+  const [category, setCategory] = useState('all'); // Default to 'all' ('for you')
   const [user, setUser] = useState(undefined); // Start as undefined to track loading
   const location = useLocation();
 
@@ -43,7 +43,8 @@ function App() {
 
   // --- THIS IS THE FIX ---
   // This logic now *only* depends on the category.
-  // It will fetch polls and keep them, even when you navigate away.
+  // When you click a tag, 'category' changes, and this code re-runs
+  // to fetch the new polls.
   useEffect(() => {
     const fetchQuestions = async () => {
       setLoading(true);
@@ -59,7 +60,7 @@ function App() {
     };
 
     fetchQuestions();
-  }, [category]); // Only re-run when category changes
+  }, [category]); // Only re-run when 'category' changes
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -83,8 +84,6 @@ function App() {
           </>
         )}
         <div className={styles.container}>
-          {/* Outlet renders the correct child page (Home, Login, MarketDetail, etc.) */}
-          {/* We pass the context to all of them */}
           <Outlet context={contextValue} />
         </div>
       </main>

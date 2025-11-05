@@ -2,34 +2,35 @@
 
 .nav {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 1rem;
-  padding: 1rem;
-  border-bottom: 1px solid #374151;
+  gap: 0.75rem; /* Added a bit more spacing */
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #333; /* Dark border */
 }
 
-.categoryButton {
-  padding: 0.5rem 1.5rem;
-  background-color: #042F2C;
-  color: #D1D5DB;
-  border: none;
-  border-radius: 9999px;
+.nav button {
+  background-color: #242424; /* Dark background */
+  border: 1px solid #333; /* Subtle border */
+  padding: 0.6rem 1.2rem;
   cursor: pointer;
+  border-radius: 8px; /* Rounded corners */
+  color: rgba(255, 255, 255, 0.87); /* Light text */
   font-weight: 500;
-  transition: background-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+  font-size: 0.9rem;
+  text-transform: capitalize; /* Makes "for you" -> "For You" */
+  transition: all 0.2s ease-in-out;
 }
 
-.categoryButton:hover {
-  background-color: #0D9488;
-  color: white;
-  transform: translateY(-1px);
+.nav button:hover {
+  background-color: #333; /* Slightly lighter on hover */
+  border-color: #555;
 }
 
-/* ✅ Highlight active category */
-.active {
-  background-color: #14B8A6; /* teal highlight */
-  color: #0f172a;            /* dark text for contrast */
+.nav button.active {
+  background-color: #646cff; /* Original theme purple */
+  color: #fff; /* White text */
+  border-color: #646cff;
   font-weight: 600;
-  box-shadow: 0 0 10px rgba(20, 184, 166, 0.6);
+  box-shadow: 0 0 10px rgba(100, 108, 255, 0.3);
 }
