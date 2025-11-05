@@ -8,17 +8,16 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("./models/User");
 const UserStats = require("./models/UserStats");
-const Bet = require("./models/Bet"); // <-- Import the new Bet model
+const Bet = require("./models/Bet");
 const axios = require("axios");
 
 const JWT_SECRET = "paperboy_secret"; // ideally from process.env
-
 
 dotenv.config();
 
 // Logging environment variables
 console.log("✅ Loaded NEWS_API_KEY:", process.env.NEWS_API_KEY ? "Set" : "Not Set!");
-console.log("✅ Loaded HF_TOKEN:", process.env.HF_TOKEN ? "Set" : "Not Set!"); // Check HF token if still used
+console.log("✅ Loaded HF_TOKEN:", process.env.HF_TOKEN ? "Set" : "Not Set!");
 
 const app = express();
 app.use(cors());
@@ -26,16 +25,33 @@ app.use(express.json());
 
 // Connect MongoDB
 mongoose
-  .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/paperboy", {
-    // useNewUrlParser: true, // Deprecated options removed
-    // useUnifiedTopology: true, // Deprecated options removed
-  })
+  .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/paperboy", {})
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.log("❌ DB Error:", err));
 
-// --- Existing Routes ---
+// --- Routes ---
 
 app.get("/", (req, res) => res.send("Backend running..."));
+
+// --- NEW ROUTE: For News Carousel ---
+// Fetches general top headlines, which is allowed on the free plan.
+app.get("/api/top-headlines", async (req, res) => {
+  try {
+    const url = `https://newsapi.org/v2/top-headlines?country=us&pageSize=10&apiKey=${process.env.NEWS_API_KEY}`;
+    console.log(`🔍 Fetching top headlines for carousel...`);
+    const { data } = await axios.get(url);
+
+    // Just send the raw articles
+    res.json(data.articles || []);
+
+  } catch (err) {
+    const status = err.response?.status;
+    const message = err.response?.data?.message || err.message;
+    console.error(`Error fetching top headlines (Status: ${status || 'N/A'}):`, message);
+    res.status(status || 500).json({ message: "Error fetching top headlines" });
+  }
+});
+// ---
 
 // Get all polls
 app.get("/api/questions", async (req, res) => {
@@ -76,18 +92,54 @@ app.get("/api/question/:id", async (req, res) => {
   }
 });
 
-// Submit vote (Keep this for now, maybe refactor later?)
+// Get Price History for Graph
+app.get("/api/question/:id/history", async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id)
+                                   .select("options priceHistory");
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+    const labels = question.priceHistory.map(entry => {
+        return new Date(entry.timestamp).toLocaleString('en-US', {
+            month: 'short', day: 'numeric',
+            hour: 'numeric', minute: '2-digit', hour12: true
+        });
+    });
+    const datasets = question.options.map((option, index) => {
+        const colors = {"Yes": "#34d399", "No": "#f87171"};
+        const defaultColors = ["#34d399", "#60a5fa", "#f87171", "#c084fc"];
+        const data = question.priceHistory.map(entry => {
+            const priceEntry = entry.prices.find(p => p.name === option.name);
+            return priceEntry ? priceEntry.price : null;
+        });
+        const color = colors[option.name] || defaultColors[index % defaultColors.length];
+        return {
+            label: option.name,
+            data: data,
+            borderColor: color,
+            backgroundColor: color + '33',
+            fill: false,
+            tension: 0.1
+        };
+    });
+    res.json({ labels, datasets });
+  } catch (err) {
+    console.error(`❌ Error fetching price history for ${req.params.id}:`, err.message);
+    res.status(500).json({ message: "Failed to fetch price history" });
+  }
+});
+
+// Submit vote (Quiz Mode - DEPRECATED but kept for now)
 app.post("/api/answer", async (req, res) => {
   try {
     const { id, selected, token } = req.body;
     const q = await Question.findById(id);
     if (!q) return res.status(404).json({ message: "Question not found" });
 
-    // Assuming isCorrect might still exist on older questions or for a different mode
     const correct = q.options.find((o) => o.name === selected)?.isCorrect || false;
 
     if (token) {
-      // UserStats update logic... (keep as is for now)
       const decoded = jwt.verify(token, JWT_SECRET);
       const userId = decoded.id;
       let stats = await UserStats.findOne({ userId });
@@ -137,31 +189,53 @@ app.get("/api/generate-news", async (req, res) => {
   }
 });
 
-// Search News route
+// --- FIXED: Search News route ---
+// Now uses the /top-headlines endpoint with the 'q' param, which works on the free plan.
 app.get("/api/search-news", async (req, res) => {
   try {
     const query = req.query.q;
     if (!query) return res.status(400).json({ message: "Missing query" });
-    const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&pageSize=10&sortBy=publishedAt&apiKey=${process.env.NEWS_API_KEY}`;
+
+    // --- CHANGED URL: Use /top-headlines instead of /everything ---
+    const url = `https://newsapi.org/v2/top-headlines?country=us&q=${encodeURIComponent(
+      query
+    )}&pageSize=10&apiKey=${process.env.NEWS_API_KEY}`;
+    
+    console.log(`🔍 Searching top headlines for: "${query}"`);
     const { data } = await axios.get(url);
+
     const results = data.articles.map((article) => ({
-      title: article.title, url: article.url, source: article.source.name,
+      title: article.title,
+      url: article.url,
+      source: article.source.name,
     }));
+
     res.json(results);
   } catch (err) {
-    console.error("Error fetching search results:", err.message);
-    res.status(500).json({ message: "Error fetching search results" });
+    const status = err.response?.status;
+    const message = err.response?.data?.message || err.message;
+    console.error(`Error fetching search results (Status: ${status || 'N/A'}):`, message);
+    res.status(status || 500).json({ message: "Error fetching search results" });
   }
 });
+// ---
 
-// Related News route
+// Related News route (for MarketDetail page)
 app.get("/api/related-news", async (req, res) => {
     try {
-        const query = req.query.q;
-        if (!query) return res.status(400).json({ message: "Missing search query (q)" });
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&pageSize=10&sortBy=relevancy&apiKey=${process.env.NEWS_API_KEY}`;
-        console.log(`🔍 Searching related news for: "${query}"`);
+        const category = req.query.category?.toLowerCase();
+        if (!category) {
+          return res.status(400).json({ message: "Missing category query" });
+        }
+        
+        // Use /top-headlines (works on free plan)
+        const url = `https://newsapi.org/v2/top-headlines?country=us&category=${encodeURIComponent(
+          category
+        )}&pageSize=10&apiKey=${process.env.NEWS_API_KEY}`;
+
+        console.log(`🔍 Searching top headlines for category: "${category}"`);
         const { data } = await axios.get(url);
+
         const results = data.articles.map((article) => ({
             title: article.title, url: article.url, source: article.source.name,
         })).slice(0, 10);
@@ -204,59 +278,49 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Profile route
-// Inside server/index.js
 app.get("/api/profile", async (req, res) => {
-  try { // <-- Error likely occurs within this block
+  try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: "Authorization header missing" });
     const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
     if (!token) return res.status(401).json({ message: "No token provided" });
 
-    const decoded = jwt.verify(token, JWT_SECRET); // Possible error point 1
-    const user = await User.findById(decoded.id).select("-password"); // Possible error point 2
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password"); // Corrected to remove inclusion/exclusion mix
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const statsDoc = await UserStats.findOne({ userId: user._id }); // Possible error point 3
+    const statsDoc = await UserStats.findOne({ userId: user._id });
     const stats = { attempted: statsDoc?.attempted || 0, correct: statsDoc?.correct || 0 };
 
-    const allStats = await UserStats.find().populate("userId", "username"); // Possible error point 4
+    const allStats = await UserStats.find().populate("userId", "username");
     const leaderboard = allStats.map((s) => ({
-      // Ensure s.userId is not null before accessing username
-      username: s.userId ? s.userId.username : 'Unknown User',
+      username: s.userId ? s.userId.username : 'Unknown User', // Safety check
       accuracy: s.attempted > 0 ? (s.correct / s.attempted) * 100 : 0,
     })).sort((a, b) => b.accuracy - a.accuracy);
 
     const userRank = leaderboard.findIndex((p) => p.username === user.username) + 1;
 
     res.json({ user, stats, leaderboard, userRank });
-  } catch (err) { // <-- The specific error gets caught here
-    // This is the message logged on the SERVER console
-    console.error("❌ Error loading profile:", err.message, err.stack); // Added err.stack for more detail
-    res.status(500).json({ message: "Error loading profile" }); // This is sent to the browser
+  } catch (err) {
+    console.error("❌ Error loading profile:", err.message, err.stack);
+    res.status(500).json({ message: "Error loading profile" });
   }
 });
 
-// --- Simple Placeholder Market Maker Logic ---
-// --- Updated Placeholder Market Maker Logic ---
+// Simple Placeholder Market Maker Logic
 async function updateMarketPrices(questionId, boughtOptionName, betAmount) {
   try {
     const question = await Question.findById(questionId);
-    if (!question || question.resolvingOptionName) {
-      return;
-    }
-
+    if (!question || question.resolvingOptionName) return;
     const options = question.options;
     const numOptions = options.length;
     if (numOptions < 2) return;
-
     const boughtOption = options.find(opt => opt.name === boughtOptionName);
     if (!boughtOption) return;
 
-    // --- Basic Price Adjustment (same as before) ---
     const priceIncrease = Math.min(5, Math.max(1, Math.floor(betAmount / 20)));
     let newBoughtPrice = Math.min(99, boughtOption.price + priceIncrease);
     const actualIncrease = newBoughtPrice - boughtOption.price;
-
     let totalOtherPrice = 100 - boughtOption.price;
     let decreaseDistributed = 0;
 
@@ -270,125 +334,80 @@ async function updateMarketPrices(questionId, boughtOptionName, betAmount) {
 
     boughtOption.price = newBoughtPrice;
 
-    // --- Re-normalize prices (same as before) ---
     let currentSum = options.reduce((sum, opt) => sum + opt.price, 0);
     let difference = 100 - currentSum;
 
     if (difference !== 0) {
       let adjustOption = options.find(opt => opt.name !== boughtOptionName && opt.price > 1 && opt.price < 99);
-      if (!adjustOption) {
-          adjustOption = boughtOption;
-      }
+      if (!adjustOption) adjustOption = boughtOption;
       adjustOption.price = Math.max(1, Math.min(99, adjustOption.price + difference));
     }
-    
-    currentSum = options.reduce((sum, opt) => sum + opt.price, 0);
-    if (currentSum !== 100 && options.length > 0) {
-         // Force the first option (or any option) to absorb the final rounding error
+     currentSum = options.reduce((sum, opt) => sum + opt.price, 0);
+     if (currentSum !== 100 && options.length > 0) {
          options[0].price = Math.max(1, Math.min(99, options[0].price + (100 - currentSum)));
-    }
-    // --- End Re-normalization ---
+     }
 
-
-    // --- NEW: Add the new prices to the history ---
+    // Add new prices to history
     question.priceHistory.push({
       prices: question.options.map(opt => ({ name: opt.name, price: opt.price }))
-      // Timestamp will be added by default
     });
-    // ---
 
-    // Mark options as modified
     question.markModified('options');
-    question.markModified('priceHistory'); // Mark history as modified
-    await question.save(); // Save everything in one go
-
+    question.markModified('priceHistory');
+    await question.save();
     console.log(`Prices updated for question ${questionId}. New prices:`, question.options.map(o => `${o.name}: ${o.price}¢`).join(', '));
 
   } catch (error) {
     console.error(`❌ Error updating market prices for question ${questionId}:`, error.message);
   }
 }
-// --- End Updated Market Maker ---
-// --- End Placeholder Market Maker ---
 
-// --- NEW ROUTE: Handle Bet Placement ---
-// --- Updated /api/bet Route ---
+// Handle Bet Placement
 app.post("/api/bet", async (req, res) => {
   try {
     const { questionId, selectedOptionName, betAmount, token } = req.body;
-
-    // 1. Validate Input (unchanged)
     if (!questionId || !selectedOptionName || !betAmount || !token) {
       return res.status(400).json({ message: "Missing required bet information or token" });
     }
     const amount = Number(betAmount);
     if (isNaN(amount) || amount < 1) {
-      return res.status(400).json({ message: "Invalid bet amount" });
+        return res.status(400).json({ message: "Invalid bet amount" });
     }
 
-    // 2. Verify User Token (unchanged)
     let decoded;
-    try {
-      decoded = jwt.verify(token, JWT_SECRET);
-    } catch (authError) {
-      return res.status(401).json({ message: "Invalid or expired token" });
-    }
+    try { decoded = jwt.verify(token, JWT_SECRET); }
+    catch (authError) { return res.status(401).json({ message: "Invalid or expired token" }); }
     const userId = decoded.id;
 
-    // --- 3. Fetch User and Question ---
-    // Use Promise.all to fetch both concurrently for efficiency
     const [user, question] = await Promise.all([
         User.findById(userId),
         Question.findById(questionId)
     ]);
 
-    // --- 4. Validate User and Question Existence ---
-    if (!user) {
-        return res.status(404).json({ message: "User not found" });
-    }
-    if (!question) {
-      return res.status(404).json({ message: "Question not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!question) return res.status(404).json({ message: "Question not found" });
     if (question.resolvingOptionName) {
-        return res.status(400).json({ message: "Market has already resolved" });
+        return res.status(400).json({ message: "Market is already resolved" });
     }
     const selectedOption = question.options.find(opt => opt.name === selectedOptionName);
     if (!selectedOption) {
       return res.status(400).json({ message: "Selected option not found" });
     }
 
-    // --- 5. Check User Balance ---
     if (user.points < amount) {
       return res.status(400).json({ message: `Insufficient points. You have ${user.points} points.` });
     }
-    // ---
 
-    // 6. Get price at bet (unchanged)
     const priceAtBet = selectedOption.price;
-
-    // --- 7. Deduct Points from User ---
     user.points -= amount;
-    // ---
-
-    // 8. Create the Bet (unchanged)
     const newBet = new Bet({
       userId, questionId, selectedOptionName, betAmount: amount, priceAtBet,
     });
 
-    // --- 9. Save User and Bet (IMPORTANT: Save both) ---
-    // Use Promise.all to save concurrently
-    await Promise.all([
-        user.save(),
-        newBet.save()
-    ]);
-    // ---
-
-    // 10. TODO: Update option prices based on the bet (market maker logic)
+    await Promise.all([ user.save(), newBet.save() ]);
     await updateMarketPrices(questionId, selectedOptionName, amount);
 
     console.log(`Bet placed: User ${userId} bet ${amount} on "${selectedOptionName}". New balance: ${user.points}`);
-
-    // Send back success message and maybe the new balance
     res.status(201).json({ message: "Bet placed successfully", bet: newBet, newBalance: user.points });
 
   } catch (err) {
@@ -399,59 +418,82 @@ app.post("/api/bet", async (req, res) => {
     res.status(500).json({ message: "Failed to place bet" });
   }
 });
-// --- End Updated /api/bet Route ---
-// --- NEW ROUTE: Get Price History for Graph ---
-app.get("/api/question/:id/history", async (req, res) => {
+
+// Admin Check Middleware
+const adminCheck = async (req, res, next) => {
+  const token = req.body.token || req.headers["authorization"]?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "No token provided, authorization denied" });
   try {
-    const question = await Question.findById(req.params.id)
-                                   .select("options priceHistory"); // Only select fields we need
-    if (!question) {
-      return res.status(404).json({ message: "Question not found" });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (user && user.role === 'admin') {
+      req.user = user;
+      next();
+    } else {
+      return res.status(403).json({ message: "Access denied: Admin role required" });
+    }
+  } catch (err) {
+    res.status(401).json({ message: "Token is not valid" });
+  }
+};
+
+// Resolve Market & Payout Winners
+app.post("/api/question/:id/resolve", adminCheck, async (req, res) => {
+  try {
+    const { questionId } = req.params; // Corrected: get ID from params
+    const { winningOptionName } = req.body;
+    if (!winningOptionName) {
+      return res.status(400).json({ message: "Winning option name is required" });
     }
 
-    // --- Format data for Chart.js ---
-    // 1. Create labels (timestamps)
-    // Format timestamps to be more readable (e.g., "Oct 25, 9:40 PM")
-    const labels = question.priceHistory.map(entry => {
-        return new Date(entry.timestamp).toLocaleString('en-US', {
-            month: 'short', day: 'numeric',
-            hour: 'numeric', minute: '2-digit', hour12: true
-        });
+    const question = await Question.findById(questionId);
+    if (!question) return res.status(404).json({ message: "Question not found" });
+    if (question.resolvingOptionName) return res.status(400).json({ message: "Market is already resolved" });
+    
+    const isValidOption = question.options.some(opt => opt.name === winningOptionName);
+    if (!isValidOption) return res.status(400).json({ message: "Invalid winning option name" });
+
+    question.resolvingOptionName = winningOptionName;
+    await question.save();
+    console.log(`Market ${questionId} resolved. Winning option: ${winningOptionName}`);
+
+    const winningBets = await Bet.find({
+      questionId: questionId,
+      selectedOptionName: winningOptionName
     });
 
-    // 2. Create datasets (one for each option)
-    const datasets = question.options.map(option => {
-        const colors = {"Yes": "#34d399", "No": "#f87171"}; // Simple colors for Yes/No
-        const defaultColors = ["#34d399", "#60a5fa", "#f87171", "#c084fc"];
+    if (winningBets.length === 0) {
+      return res.status(200).json({ message: "Market resolved. No winning bets to pay out." });
+    }
+    console.log(`Found ${winningBets.length} winning bets. Calculating payouts...`);
 
-        // Find the price for this option in each history entry
-        const data = question.priceHistory.map(entry => {
-            const priceEntry = entry.prices.find(p => p.name === option.name);
-            return priceEntry ? priceEntry.price : null; // Use null for missing data
-        });
+    const bulkUserUpdates = [];
+    for (const bet of winningBets) {
+      const payout = Math.floor((100 / bet.priceAtBet) * bet.betAmount);
+      console.log(`Bet ${bet._id}: User ${bet.userId} wins ${payout} points (bet ${bet.betAmount} @ ${bet.priceAtBet}¢)`);
+      bulkUserUpdates.push({
+        updateOne: {
+          filter: { _id: bet.userId },
+          update: { $inc: { points: payout } }
+        }
+      });
+    }
 
-        // Pick a color
-        const color = colors[option.name] || defaultColors[question.options.indexOf(option) % defaultColors.length];
+    if (bulkUserUpdates.length > 0) {
+      await User.bulkWrite(bulkUserUpdates);
+      console.log(`Successfully paid out ${bulkUserUpdates.length} winning bets.`);
+    }
 
-        return {
-            label: option.name, // "Yes", "No", "Candidate A", etc.
-            data: data,
-            borderColor: color,
-            backgroundColor: color + '33', // Lighter color for area fill (optional)
-            fill: false, // Don't fill under the line
-            tension: 0.1 // Make the line slightly curved
-        };
+    res.status(200).json({ 
+        message: "Market resolved and winners paid successfully.",
+        winnersPaid: bulkUserUpdates.length
     });
-
-    res.json({ labels, datasets });
-    // --- End Format Data ---
 
   } catch (err) {
-    console.error(`❌ Error fetching price history for ${req.params.id}:`, err.message);
-    res.status(500).json({ message: "Failed to fetch price history" });
+    console.error("❌ Error resolving market:", err.message);
+    res.status(500).json({ message: "Failed to resolve market" });
   }
 });
-// --- END NEW ROUTE ---
 
 // Start the server
 app.listen(5000, () => console.log("🚀 Server running on port 5000"));

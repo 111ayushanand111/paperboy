@@ -6,13 +6,12 @@ import axios from "axios";
 
 const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [displayedPoints, setDisplayedPoints] = useState(null); // Use null to indicate "not loaded yet"
+  const [displayedPoints, setDisplayedPoints] = useState(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const navigate = useNavigate();
   const searchRef = useRef(null);
 
-  // Function to fetch profile and update points
   const fetchProfileAndSetPoints = async (token) => {
     console.log("[Header] Fetching profile data...");
     try {
@@ -23,7 +22,7 @@ const Header = () => {
         const points = res.data.user.points;
         console.log("[Header] Fetched points from profile:", points);
         setDisplayedPoints(points);
-        localStorage.setItem("userPoints", points.toString()); // Store fetched points
+        localStorage.setItem("userPoints", points.toString());
       } else {
         console.warn("[Header] Points field missing from profile response, defaulting to 0.");
         setDisplayedPoints(0);
@@ -32,16 +31,13 @@ const Header = () => {
     } catch (err) {
       console.error("Error fetching points for header:", err);
       if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-        // Token is invalid, trigger logout
         handleLogout();
       } else {
-        // For other errors, maybe show 0 or keep existing state? Let's show 0.
         setDisplayedPoints(0);
       }
     }
   };
 
-  // Effect runs on mount and when login status might change
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -51,7 +47,6 @@ const Header = () => {
         console.log("[Header] Using points from localStorage:", storedPoints);
         setDisplayedPoints(parseInt(storedPoints, 10));
       } else {
-        // If not in storage, fetch immediately
         fetchProfileAndSetPoints(token);
       }
     } else {
@@ -60,7 +55,6 @@ const Header = () => {
       localStorage.removeItem("userPoints");
     }
 
-    // Event Listener for updates from other components
     const handlePointsUpdate = () => {
       console.log("[Header] pointsUpdated event received.");
       const updatedPoints = localStorage.getItem("userPoints");
@@ -69,63 +63,109 @@ const Header = () => {
         setDisplayedPoints(parseInt(updatedPoints, 10));
       } else {
          console.warn("[Header] userPoints not found in localStorage during update event");
-         // Maybe fetch profile again as a fallback? For now, just log.
       }
     };
     window.addEventListener('pointsUpdated', handlePointsUpdate);
 
-    return () => { // Cleanup
+    return () => {
       window.removeEventListener('pointsUpdated', handlePointsUpdate);
     };
-  }, [isLoggedIn]); // Dependency array includes isLoggedIn
+  }, [isLoggedIn]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
     localStorage.removeItem("userPoints");
-    setIsLoggedIn(false); // Update state FIRST
-    // No need to setDisplayedPoints(null) here, useEffect will handle it
+    setIsLoggedIn(false);
     navigate("/");
   };
 
-  // --- Search Logic (ensure full implementation is present) ---
-  useEffect(() => { /* ... Click outside handler ... */ }, []);
-  const handleKeyDown = (e) => { /* ... Escape key handler ... */ };
-  const handleSearchChange = async (e) => { /* ... Search logic ... */ };
-  // ---
+  // --- Search Logic ---
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setResults([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Escape") {
+      setResults([]);
+      setQuery("");
+    }
+  };
+
+  const handleSearchChange = async (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    if (value.length < 3) {
+      setResults([]);
+      return;
+    }
+    try {
+      // This endpoint is now fixed on the backend to use the free-tier-friendly
+      // /top-headlines?q=... endpoint
+      const res = await axios.get(`http://localhost:5000/api/search-news?q=${encodeURIComponent(value)}`);
+      setResults(res.data);
+    } catch (err) {
+      console.error("Error searching news:", err);
+      setResults([]);
+    }
+  };
+  // --- End Search Logic ---
 
   console.log("[Header] Rendering Header, current displayedPoints:", displayedPoints);
 
   return (
     <header className={styles.header}>
-      {/* Logo */}
       <h1 className={styles.logo} onClick={() => navigate("/")} style={{ cursor: "pointer" }}>Paperboy</h1>
 
-      {/* Search Bar */}
       <div className={styles.searchContainer} ref={searchRef}>
         <FiSearch className={styles.searchIcon} />
-        <input type="text" placeholder="Search news markets" value={query} onChange={handleSearchChange} onKeyDown={handleKeyDown} className={styles.searchInput} />
+        <input
+          type="text"
+          placeholder="Search news articles..." // Updated placeholder
+          value={query}
+          onChange={handleSearchChange}
+          onKeyDown={handleKeyDown}
+          className={styles.searchInput}
+        />
         {results.length > 0 && (
-          <ul className={styles.resultsDropdown}> {results.map((r, i) => ( <li key={i} className={styles.resultsItem} onClick={() => { window.open(r.url, "_blank"); setResults([]); setQuery(""); }}> {r.title} <span className={styles.resultsSource}>({r.source})</span> </li> ))} </ul>
+          <ul className={styles.resultsDropdown}>
+            {results.map((r, i) => (
+              <li
+                key={i}
+                className={styles.resultsItem}
+                // Click opens article in new tab
+                onClick={() => { window.open(r.url, "_blank"); setResults([]); setQuery(""); }}
+              >
+                {r.title} <span className={styles.resultsSource}>({r.source})</span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 
-      {/* Auth Section */}
       <div className={styles.authLinks}>
         {isLoggedIn ? (
           <div className={styles.userMenu}>
-            {/* Display Points */}
             <div className={styles.userPoints}>
               <FiTrendingUp />
               <span>{displayedPoints !== null ? displayedPoints.toLocaleString() : '...'} Points</span>
             </div>
-            {/* Profile Icon */}
-            <div className={styles.profileIcon} onClick={() => navigate("/profile")}> <img src="/profile.png" alt="Profile" className={styles.avatar} /> </div>
-            {/* Logout Button */}
+            <div className={styles.profileIcon} onClick={() => navigate("/profile")}>
+              <img src="/profile.png" alt="Profile" className={styles.avatar} />
+            </div>
             <button onClick={handleLogout} className={styles.logoutBtn}> Logout </button>
           </div>
         ) : (
-          <> <Link to="/login" className={styles.link}>Login</Link> <Link to="/register" className={styles.link}>Register</Link> </>
+          <>
+            <Link to="/login" className={styles.link}>Login</Link>
+            <Link to="/register" className={styles.link}>Register</Link>
+          </>
         )}
       </div>
     </header>

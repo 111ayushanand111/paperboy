@@ -40,7 +40,7 @@ function App() {
       <NewsCarousel />
 
       <section className={styles.predictionsSection}>
-        <h2 style={{ color: "white", margin: "20px 0" }}>🗳️ Live Polls</h2>
+        <h2 style={{ color: "white", margin: "20px 0" }}></h2>
 
         {/* 2. Use the "predictionsGrid" style from your CSS file */}
         <div className={styles.predictionsGrid}>

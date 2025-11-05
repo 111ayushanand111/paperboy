@@ -1,83 +1,151 @@
-/* src/components/NewsCarousel.module.css */
-.carousel {
+/*
+* src/components/NewsCarousel.module.css
+* Styles for carousel with 30/70 ratio and styled default arrows.
+*/
+
+.carouselContainer {
+  width: 100%;
+  /* This margin adds the padding you requested */
+  margin: 2rem 1em; 
   position: relative;
-  background-color: #111c33;
-  color: white;
-  border-radius: 1rem;
+  height: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.loading {
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  height: 16rem;
-  margin: 1rem 0;
-  padding: 0 1.25rem;
+  height: 250px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.slide {
+  height: 250px;
+  color: white;
+  background: rgba(0, 180, 216, 0.2);
+}
+
+.slideLink {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 30% Image */
+.slideImage {
+  width: 30%;
+  height: 100%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* 70% Text */
+.slideContent {
+  width: 70%;
+  padding: 1.5rem 2.5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.4));
   overflow: hidden;
 }
 
-.carouselTrack {
-  display: flex;
-  transition: transform 0.8s ease-in-out;
-  width: 100%;
+.slideSource {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
 }
 
-.title {
-  min-width: 100%;
-  font-size: 3.75rem;
-  font-weight: bold;
-  text-align: center;
-  padding: 0 1.25rem;
-  box-sizing: border-box;
-  /* Add this property to allow the text to wrap */
-  white-space: normal; 
-  /* Adjust font size for better wrapping on smaller screens */
-  word-wrap: break-word; 
-  line-height: 1.2;
+.slideTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.arrow {
-  font-size: 2.25rem;
-  background: none;
-  border: none;
+/* --- Global Overrides for Slick Carousel --- */
+
+/* Make the slider itself fill our container */
+.carouselContainer :global(.slick-slider),
+.carouselContainer :global(.slick-list),
+.carouselContainer :global(.slick-track) {
+  height: 100%;
+}
+
+/* Make each slide's inner div fill the height */
+.carouselContainer :global(.slick-slide > div) {
+  height: 100%;
+}
+
+/* Style the dots */
+.carouselContainer :global(.slick-dots) {
+  bottom: 10px;
+}
+.carouselContainer :global(.slick-dots li button:before) {
   color: white;
-  cursor: pointer;
+  opacity: 0.5;
+  font-size: 10px;
+}
+.carouselContainer :global(.slick-dots li.slick-active button:before) {
+  opacity: 1;
+}
+
+/* --- Arrow Styling (Targeting default classes) --- */
+
+/*
+  By default, slick arrows are hidden. We make them
+  visible only when hovering the main container.
+*/
+.carouselContainer :global(.slick-prev),
+.carouselContainer :global(.slick-next) {
+  font-size: 2.5rem; /* Makes the arrow icon larger */
+  color: white;
+  opacity: 0; /* Hide by default */
   z-index: 10;
+  width: 50px; /* Increase hit area */
+  height: 50px;
+  transition: opacity 0.2s ease;
 }
 
-.dotsContainer {
-  position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-}
-.dot {
-  width: 0.75rem;
-  height: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.5);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+/* Show on container hover */
+.carouselContainer:hover :global(.slick-prev),
+.carouselContainer:hover :global(.slick-next) {
+  opacity: 0.7;
 }
 
-.activeDot {
-  width: 0.9rem;
-  height: 0.9rem;
-  background-color: white;
-  transform: scale(1.3333); /* Increase size by a factor */
-}
-/* Left arrow positioning */
-.arrow:nth-of-type(1) {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
+.carouselContainer :global(.slick-prev:hover),
+.carouselContainer :global(.slick-next:hover) {
+  opacity: 1; /* Fully visible on arrow hover */
 }
 
-/* Right arrow positioning */
-.arrow:nth-of-type(2) {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
+/* Position arrows */
+.carouselContainer :global(.slick-prev) {
+  left: 15px;
+}
+.carouselContainer :global(.slick-next) {
+  right: 15px;
+}
+
+/* Style the default arrow character */
+.carouselContainer :global(.slick-prev:before),
+.carouselContainer :global(.slick-next:before) {
+  font-family: 'slick'; /* Use the default icon font */
+  font-size: 2.5rem; /* Make the arrow character larger */
+  color: white;
+  opacity: 1; /* Ensure the character itself is visible */
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.7); 
 }

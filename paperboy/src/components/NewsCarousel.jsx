@@ -1,108 +1,79 @@
-import { useEffect, useState, useRef } from "react";
-import styles from "./NewsCarousel.module.css";
+import { useEffect, useState } from "react";
 import axios from "axios";
+import styles from "./NewsCarousel.module.css";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Slider from "react-slick";
+// We no longer need react-icons for the arrows
 
 export default function NewsCarousel() {
-  const [news, setNews] = useState([]);
-  const [current, setCurrent] = useState(0);
-  const intervalRef = useRef(null);
-  const isAnimating = useRef(false);
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch dynamic headlines from backend (latest questions)
   useEffect(() => {
-    const fetchNews = async () => {
+    const fetchTopHeadlines = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get("http://localhost:5000/api/questions");
-        setNews(res.data.slice(0, 10)); // top 10
+        const res = await axios.get("http://localhost:5000/api/top-headlines");
+        const articlesWithImages = res.data.filter(
+          (article) => article.urlToImage
+        );
+        setArticles(articlesWithImages.slice(0, 10));
       } catch (err) {
-        console.error("Error fetching news:", err);
+        console.error("Error fetching top headlines for carousel:", err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchNews();
+    fetchTopHeadlines();
   }, []);
 
-  // ✅ Auto-slide every 5s
-  useEffect(() => {
-    if (news.length === 0) return;
-    startAutoSlide();
-    return () => clearInterval(intervalRef.current);
-  }, [news, current]);
-
-  const startAutoSlide = () => {
-    clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => nextSlide(), 5000);
+  // Updated settings
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    pauseOnHover: true,
+    arrows: true, // <-- This enables the default arrow navigation
   };
 
-  const nextSlide = () => {
-    if (isAnimating.current) return;
-    isAnimating.current = true;
-    setCurrent((prev) => (prev + 1) % news.length);
-    setTimeout(() => (isAnimating.current = false), 800);
-  };
-
-  const prevSlide = () => {
-    if (isAnimating.current) return;
-    isAnimating.current = true;
-    setCurrent((prev) => (prev - 1 + news.length) % news.length);
-    setTimeout(() => (isAnimating.current = false), 800);
-  };
-
-  const goToSlide = (index) => {
-    if (!isAnimating.current) setCurrent(index);
-  };
-
-  const handleMouseEnter = () => clearInterval(intervalRef.current);
-  const handleMouseLeave = () => startAutoSlide();
+  if (loading) {
+    return <div className={styles.loading}>Loading Top News...</div>;
+  }
+  
+  if (articles.length === 0) {
+      return <div className={styles.loading}>No top news found.</div>
+  }
 
   return (
-    <div
-      className={styles.carousel}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      {news.length > 0 ? (
-        <>
-          {/* Left arrow */}
-          <button onClick={prevSlide} className={styles.arrow}>
-            &#10094;
-          </button>
-
-          {/* ✅ Use transform for smooth movement */}
-          <div
-            className={styles.carouselTrack}
-            style={{
-              transform: `translateX(-${current * 100}%)`,
-              transition: "transform 0.8s ease-in-out",
-            }}
-          >
-            {news.map((item, index) => (
-              <h2 key={index} className={styles.title}>
-                {item.title?.replace(/\?$/, "")}
-              </h2>
-            ))}
+    // We apply padding (via margin) to this container
+    <div className={styles.carouselContainer}>
+      <Slider {...settings}>
+        {articles.map((article, index) => (
+          <div key={index} className={styles.slide}>
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.slideLink}
+            >
+              <img
+                src={article.urlToImage}
+                alt={article.title}
+                className={styles.slideImage}
+              />
+              <div className={styles.slideContent}>
+                <span className={styles.slideSource}>{article.source.name}</span>
+                <h3 className={styles.slideTitle}>{article.title}</h3>
+              </div>
+            </a>
           </div>
-
-          {/* Right arrow */}
-          <button onClick={nextSlide} className={styles.arrow}>
-            &#10095;
-          </button>
-
-          {/* Dots */}
-          <div className={styles.dotsContainer}>
-            {news.map((_, index) => (
-              <span
-                key={index}
-                className={`${styles.dot} ${
-                  index === current ? styles.activeDot : ""
-                }`}
-                onClick={() => goToSlide(index)}
-              ></span>
-            ))}
-          </div>
-        </>
-      ) : (
-        <h2 className={styles.title}>Loading News...</h2>
-      )}
+        ))}
+      </Slider>
     </div>
   );
 }
