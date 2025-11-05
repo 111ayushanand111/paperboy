@@ -12,19 +12,21 @@ const Header = () => {
   const navigate = useNavigate();
   const searchRef = useRef(null);
 
+  // --- State for debouncing the search input ---
+  const [debounceTimeout, setDebounceTimeout] = useState(null);
+  // ---
+
+  // Function to fetch profile and update points (used as fallback)
   const fetchProfileAndSetPoints = async (token) => {
-    console.log("[Header] Fetching profile data...");
     try {
       const res = await axios.get("http://localhost:5000/api/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.user?.points !== undefined) {
         const points = res.data.user.points;
-        console.log("[Header] Fetched points from profile:", points);
         setDisplayedPoints(points);
         localStorage.setItem("userPoints", points.toString());
       } else {
-        console.warn("[Header] Points field missing from profile response, defaulting to 0.");
         setDisplayedPoints(0);
         localStorage.setItem("userPoints", "0");
       }
@@ -38,13 +40,13 @@ const Header = () => {
     }
   };
 
+  // Effect runs on mount and when login status might change
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       setIsLoggedIn(true);
       const storedPoints = localStorage.getItem("userPoints");
       if (storedPoints !== null) {
-        console.log("[Header] Using points from localStorage:", storedPoints);
         setDisplayedPoints(parseInt(storedPoints, 10));
       } else {
         fetchProfileAndSetPoints(token);
@@ -56,22 +58,19 @@ const Header = () => {
     }
 
     const handlePointsUpdate = () => {
-      console.log("[Header] pointsUpdated event received.");
       const updatedPoints = localStorage.getItem("userPoints");
-      console.log("[Header] Points read from localStorage on event:", updatedPoints);
       if (updatedPoints !== null) {
         setDisplayedPoints(parseInt(updatedPoints, 10));
-      } else {
-         console.warn("[Header] userPoints not found in localStorage during update event");
       }
     };
     window.addEventListener('pointsUpdated', handlePointsUpdate);
 
-    return () => {
+    return () => { // Cleanup
       window.removeEventListener('pointsUpdated', handlePointsUpdate);
     };
   }, [isLoggedIn]);
 
+  // Logout handler
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
@@ -98,26 +97,36 @@ const Header = () => {
     }
   };
 
-  const handleSearchChange = async (e) => {
+  // --- UPDATED: Debounced Search Handler ---
+  const handleSearchChange = (e) => {
     const value = e.target.value;
-    setQuery(value);
+    setQuery(value); // Update the input field immediately
+
+    // Clear the old timeout
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
     if (value.length < 3) {
       setResults([]);
       return;
     }
-    try {
-      // This endpoint is now fixed on the backend to use the free-tier-friendly
-      // /top-headlines?q=... endpoint
-      const res = await axios.get(`http://localhost:5000/api/search-news?q=${encodeURIComponent(value)}`);
-      setResults(res.data);
-    } catch (err) {
-      console.error("Error searching news:", err);
-      setResults([]);
-    }
-  };
-  // --- End Search Logic ---
 
-  console.log("[Header] Rendering Header, current displayedPoints:", displayedPoints);
+    // Set a new timeout
+    const newTimeout = setTimeout(async () => {
+      try {
+        console.log(`[Debounced Search] Searching for: "${value}"`); // Log to show it's working
+        const res = await axios.get(`http://localhost:5000/api/search-news?q=${encodeURIComponent(value)}`);
+        setResults(res.data);
+      } catch (err) {
+        console.error("Error searching news:", err);
+        setResults([]);
+      }
+    }, 300); // Wait 300ms after user stops typing
+
+    setDebounceTimeout(newTimeout);
+  };
+  // --- End Updated Search Logic ---
 
   return (
     <header className={styles.header}>
@@ -127,9 +136,9 @@ const Header = () => {
         <FiSearch className={styles.searchIcon} />
         <input
           type="text"
-          placeholder="Search news articles..." // Updated placeholder
+          placeholder="Search news articles..."
           value={query}
-          onChange={handleSearchChange}
+          onChange={handleSearchChange} // This now calls the debounced handler
           onKeyDown={handleKeyDown}
           className={styles.searchInput}
         />
@@ -139,7 +148,6 @@ const Header = () => {
               <li
                 key={i}
                 className={styles.resultsItem}
-                // Click opens article in new tab
                 onClick={() => { window.open(r.url, "_blank"); setResults([]); setQuery(""); }}
               >
                 {r.title} <span className={styles.resultsSource}>({r.source})</span>
