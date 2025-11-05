@@ -144,7 +144,7 @@
 .carouselContainer :global(.slick-prev:before),
 .carouselContainer :global(.slick-next:before) {
   font-family: 'slick'; /* Use the default icon font */
-  font-size: 2.5rem; /* Make the arrow character larger */
+  font-size: 1.5rem; /* Make the arrow character larger */
   color: white;
   opacity: 1; /* Ensure the character itself is visible */
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.7); 
