@@ -1,17 +1,14 @@
 require('dotenv').config();
-const { OpenAI } = require("openai"); // Using the OpenAI library
+const { OpenAI } = require("openai"); //OpenAI library
 
-const API_KEY = process.env.HF_TOKEN; // Your HF Token from .env
-// --- Use the new DeepSeek model ID provided ---
+const API_KEY = process.env.HF_TOKEN; 
 const MODEL_ID = "deepseek-ai/DeepSeek-V3.2-Exp:novita";
-// ---
 
 const client = new OpenAI({
-  baseURL: "https://router.huggingface.co/v1", // HF router URL
-  apiKey: API_KEY,                             // Your HF Token
+  baseURL: "https://router.huggingface.co/v1", 
+  apiKey: API_KEY,                             
 });
 
-// System prompt defining the task
 const SYSTEM_PROMPT = `You are a helpful assistant that creates predictive market questions from news headlines.
 You must ONLY respond with a valid JSON object.
 The JSON object must have two keys: "title" (string) and "options" (array).
@@ -34,21 +31,20 @@ async function generatePredictiveQuestion(headline) {
   }
 
   const user_prompt = `Analyze the following headline and generate the JSON:\nHEADLINE: "${headline}"`;
-  let retries = 3; // Max retries for recoverable errors
+  let retries = 3; 
   let delay = 5000;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     console.log(`AI (HF/OpenAI Lib) Attempt ${attempt}/${retries} for: "${headline}" using model ${MODEL_ID}`);
     try {
       const chatCompletion = await client.chat.completions.create({
-        model: MODEL_ID, // Use the new DeepSeek model ID
+        model: MODEL_ID, 
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: user_prompt },
         ],
-        // Removed response_format previously, keep it removed
         temperature: 0.6,
-        max_tokens: 300, // Keep increased token limit
+        max_tokens: 300, 
       });
 
       const aiResponse = chatCompletion.choices[0]?.message?.content?.trim();
@@ -65,13 +61,13 @@ async function generatePredictiveQuestion(headline) {
          const jsonMatch = aiResponse.match(/\{.*\}/s);
          if (!jsonMatch) {
             console.error(`AI (HF/OpenAI Lib): No JSON object found in the response for "${headline}". Raw:`, aiResponse);
-            return null; // Fail fast if no JSON found
+            return null; 
          }
          const jsonString = jsonMatch[0];
          data = JSON.parse(jsonString);
       } catch (parseError) {
          console.error(`AI (HF/OpenAI Lib): Failed to extract/parse JSON for "${headline}": ${parseError.message}. Raw Response:`, aiResponse);
-         return null; // Fail fast on parsing error
+         return null; 
       }
 
 
@@ -82,23 +78,22 @@ async function generatePredictiveQuestion(headline) {
 
       if (!data.title || !data.options || data.options.length < 2) {
          console.error(`AI (HF/OpenAI Lib): Invalid JSON structure received for "${headline}" (and not 'NOT_SUITABLE')`, data);
-         return null; // Fail fast on invalid structure
+         return null; 
       }
 
-      // Add default prices
+      //default prices
       const price = Math.floor(100 / data.options.length);
       const pricedOptions = data.options.map((opt) => ({
         name: String(opt.name || 'Invalid Option'),
         price: price,
       }));
 
-      return { // Success!
+      return { 
         title: String(data.title),
         options: pricedOptions,
       };
 
     } catch (error) {
-       // Error Handling: Only retry specific errors
        const status = error.status;
        const errorMessage = error.message || 'Unknown error';
        const errorDetails = error.error?.message || error.response?.data?.error?.message;

@@ -7,27 +7,27 @@ import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
 import MarketDetail from './pages/MarketDetail.jsx' 
-import AdminDashboard from './pages/AdminDashboard.jsx' // Import AdminDashboard
-import AdminRoute from './components/AdminRoute.jsx' // Import AdminRoute
-import Home from './pages/Home.jsx' // Import Home
+import AdminDashboard from './pages/AdminDashboard.jsx' 
+import AdminRoute from './components/AdminRoute.jsx' 
+import Home from './pages/Home.jsx' 
 
 import './index.css'
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />, // App is the main layout
+    element: <App />, 
     children: [
       {
-        index: true, // Renders Home component at '/'
+        index: true, 
         element: <Home />,
       },
       { path: 'login', element: <Login /> },
       { path: 'register', element: <Register /> },
       { path: 'profile', element: <Profile /> },
-      { path: 'market/:id', element: <MarketDetail /> }, // This path now works
+      { path: 'market/:id', element: <MarketDetail /> }, 
       {
-        path: 'admin', // This is the new protected admin route
+        path: 'admin', 
         element: (
           <AdminRoute>
             <AdminDashboard />

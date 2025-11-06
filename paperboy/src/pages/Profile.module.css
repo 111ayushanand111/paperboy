@@ -1,8 +1,9 @@
 .profileContainer {
   padding: 2rem 0;
   color: rgba(255, 255, 255, 0.87);
-  max-width: 1200px; /* Widen container for columns */
+  max-width: 1200px; 
   margin: 0 auto;
+  margin-top: 5rem;
 }
 
 .profileHeader {
@@ -34,7 +35,6 @@
   margin-left: 0;
 }
 
-/* --- BRINGING STATS STYLES BACK --- */
 .statsContainer {
   background: #1a1a1a;
   border: 1px solid #333;
@@ -107,7 +107,6 @@
   transition: width 0.5s ease-in-out;
   border-radius: 10px 0 0 10px;
 }
-/* --- END OF STATS STYLES --- */
 
 
 .error {
@@ -116,7 +115,6 @@
   text-align: center;
 }
 
-/* --- Columns for Leaderboard & Bet History --- */
 .columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -129,7 +127,6 @@
   }
 }
 
-/* --- Leaderboard Styles --- */
 .leaderboard {
   background: #1a1a1a;
   border: 1px solid #333;
@@ -180,7 +177,6 @@
 }
 
 
-/* --- New Bet History Styles --- */
 .betHistory {
   background: #1a1a1a;
   border: 1px solid #333;
@@ -226,14 +222,14 @@
 }
 
 .correct {
-  color: #34d399; /* Green */
+  color: #34d399;
 }
 
 .incorrect {
-  color: #f87171; /* Red */
+  color: #f87171; 
 }
 
 .pending {
-  color: #888; /* Muted */
+  color: #888; 
   font-style: italic;
 }

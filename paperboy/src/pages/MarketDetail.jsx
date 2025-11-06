@@ -37,7 +37,6 @@ function MarketDetail() {
   const [chartData, setChartData] = useState(null);
   const [relatedNews, setRelatedNews] = useState([]);
 
-  // Get user from the App.jsx layout context
   const { user } = useOutletContext(); 
   const navigate = useNavigate();
 
@@ -47,7 +46,7 @@ function MarketDetail() {
       setError('');
       setFeedback('');
       
-      console.log(`Fetching data for question ID: ${id}`); // For debugging
+      console.log(`Fetching data for question ID: ${id}`); 
       
       const [qRes, hRes] = await Promise.all([
         axios.get(`${API_URL}/question/${id}`),
@@ -112,7 +111,6 @@ function MarketDetail() {
           selectedOption.name
         }". New balance: ${data.newBalance} points.`
       );
-      // Refresh market data to show new prices
       fetchMarketData();
     } catch (err) {
       console.error('Error placing bet:', err);
@@ -120,7 +118,6 @@ function MarketDetail() {
     }
   };
 
-  // --- ADMIN PANEL REMOVED FROM THIS FILE ---
 
   if (loading) return <p>Loading market...</p>;
   if (error) return <p className={styles.error}>{error}</p>;
@@ -154,7 +151,7 @@ function MarketDetail() {
                 plugins: { legend: { position: 'top' } },
                 scales: {
                   y: {
-                    ticks: { callback: (value) => `${value}¢` }, // Keep original ¢
+                    ticks: { callback: (value) => `${value}¢` }, 
                     min: 0,
                     max: 100,
                   },
@@ -167,7 +164,7 @@ function MarketDetail() {
         </div>
 
         <form className={styles.betForm} onSubmit={handleBetSubmit}>
-          <h3>Place Your Bet</h3>
+          <h3>Place Your Prediction</h3>
           <div className={styles.optionsGrid}>
             {question.options.map((option) => (
               <button

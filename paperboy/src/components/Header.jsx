@@ -13,23 +13,16 @@ function Header({ user, onLogout }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const navigate = useNavigate();
 
-  // --- THIS IS THE FIX ---
-  // This hook watches for changes in 'query'.
-  // When you stop typing for 300ms, it will run the search.
   useEffect(() => {
-    // If the query is empty, clear results and don't do anything
     if (!query.trim()) {
       setResults([]);
       setIsSearchLoading(false);
       return;
     }
 
-    // Set loading state
     setIsSearchLoading(true);
 
-    // Set a timer for 300ms
     const searchTimer = setTimeout(() => {
-      // After 300ms, run the search
       axios.get(`${API_URL}/search-news?q=${query}`)
         .then(res => {
           setResults(res.data);
@@ -40,19 +33,15 @@ function Header({ user, onLogout }) {
           setResults([]); // Clear results on error
           setIsSearchLoading(false);
         });
-    }, 300); // 300ms debounce
+    }, 300); 
 
-    // This is a cleanup function.
-    // If you type again, it cancels the previous timer.
     return () => {
       clearTimeout(searchTimer);
     };
-  }, [query]); // This effect re-runs every time 'query' changes
-  // --- END FIX ---
+  }, [query]); 
 
   const handleSearchSubmit = (e) => {
-    e.preventDefault(); // Prevent form from reloading page
-    // The useEffect above already handles the search
+    e.preventDefault();
   };
 
   const handleLogoutClick = () => {
@@ -62,14 +51,13 @@ function Header({ user, onLogout }) {
 
   const handleFocus = () => setIsSearchFocused(true);
   
-  // Use a timeout on blur to allow for clicks on results
   const handleBlur = () => {
     setTimeout(() => {
       setIsSearchFocused(false);
-    }, 150); // 150ms delay
+    }, 150); //150ms delay
   };
   
-  // Clear results and query when a link is clicked
+  //Clear results and query when a link is clicked
   const handleResultClick = () => {
     setQuery('');
     setResults([]);

@@ -7,7 +7,6 @@ const API_URL = 'http://localhost:5000/api';
 
 function Profile() {
   const [profile, setProfile] = useState(null);
-  // This state now holds our *new* bet stats
   const [betStats, setBetStats] = useState({ total: 0, correct: 0, resolved: 0 });
   const [leaderboard, setLeaderboard] = useState([]);
   const [betHistory, setBetHistory] = useState([]);
@@ -28,7 +27,7 @@ function Profile() {
       const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
       try {
-        setLoading(true); // Set loading true at the start
+        setLoading(true); 
         const [profileRes, betsRes] = await Promise.all([
           axios.get(`${API_URL}/profile`, authHeaders),
           axios.get(`${API_URL}/profile/bets`, authHeaders)
@@ -39,7 +38,6 @@ function Profile() {
         setProfile(profileData.user);
         setLeaderboard(profileData.leaderboard);
         
-        // Set the new bet stats and history from the bets response
         setBetHistory(betsRes.data.betHistory);
         setBetStats(betsRes.data.betStats);
         
@@ -55,7 +53,7 @@ function Profile() {
           setUser(null); 
         }
       }
-      setLoading(false); // Set loading false at the end
+      setLoading(false); 
     };
 
     fetchProfileData();
@@ -65,7 +63,6 @@ function Profile() {
   if (error) return <p className={styles.error}>{error}</p>;
   if (!profile) return <p>No profile data found.</p>;
 
-  // Calculate accuracy based on *new* bet stats
   const accuracy =
     betStats.resolved > 0 ? (betStats.correct / betStats.resolved) * 100 : 0;
   
@@ -84,23 +81,23 @@ function Profile() {
 
       {/* --- STATS SECTION RE-IMPLEMENTED --- */}
       <div className={styles.statsContainer}>
-        <h2>Your Betting Stats</h2>
+        <h2>Your Prediction Stats</h2>
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
-            <h3>Total Bets Placed</h3>
+            <h3>Total Predictions Placed</h3>
             <p>{betStats.total}</p>
           </div>
           <div className={styles.statCard}>
-            <h3>Correct Bets</h3>
+            <h3>Correct Predictions</h3>
             <p>{betStats.correct}</p>
           </div>
           <div className={styles.statCard}>
-            <h3>Resolved Bets</h3>
+            <h3>Resolved Predictions</h3>
             <p>{betStats.resolved}</p>
           </div>
         </div>
         <div className={styles.accuracy}>
-          <h3>Bet Accuracy</h3>
+          <h3>Prediction Accuracy</h3>
           <div className={styles.progressBar}>
             <div
               className={styles.progressFill}
@@ -140,9 +137,9 @@ function Profile() {
         </div>
 
         <div className={styles.betHistory}>
-          <h2>Bet History</h2>
+          <h2>Prediction History</h2>
           <div className={styles.betList}>
-            {betHistory.length === 0 && <p>You haven't placed any bets yet.</p>}
+            {betHistory.length === 0 && <p>You haven't placed any Predictions yet.</p>}
             {betHistory.map(bet => {
               const market = bet.questionId;
               if (!market) return null; 

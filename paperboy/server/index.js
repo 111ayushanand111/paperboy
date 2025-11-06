@@ -11,26 +11,22 @@ const UserStats = require("./models/UserStats"); // We still need this for the o
 const Bet = require("./models/Bet");
 const axios = require("axios");
 
-const JWT_SECRET = "paperboy_secret"; // ideally from process.env
+const JWT_SECRET = "paperboy_secret"; 
 
 dotenv.config();
 
-console.log("✅ Loaded NEWS_API_KEY:", process.env.NEWS_API_KEY ? "Set" : "Not Set!");
-console.log("✅ Loaded HF_TOKEN:", process.env.HF_TOKEN ? "Set" : "Not Set!");
+console.log("Loaded NEWS_API_KEY:", process.env.NEWS_API_KEY ? "Set" : "Not Set!");
+console.log("Loaded HF_TOKEN:", process.env.HF_TOKEN ? "Set" : "Not Set!");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect MongoDB
 mongoose
   .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/paperboy", {})
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.log("❌ DB Error:", err));
 
-// --- (NEW) AUTHENTICATION MIDDLEWARE ---
-
-// This middleware just checks if a user is logged in
 const authCheck = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -40,15 +36,14 @@ const authCheck = async (req, res, next) => {
   try {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // Attach user's decoded ID (e.g., req.user.id)
+    req.user = decoded; 
     next();
   } catch (err) {
     res.status(401).json({ message: "Token is not valid" });
   }
 };
 
-// This middleware checks if a user is an ADMIN
-// It MUST run *after* authCheck
+
 const adminCheck = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
@@ -63,7 +58,6 @@ const adminCheck = async (req, res, next) => {
 };
 
 
-// --- PUBLIC ROUTES ---
 
 app.get("/", (req, res) => res.send("Backend running..."));
 
@@ -127,21 +121,14 @@ app.get("/api/question/:id/history", async (req, res) => {
   }
 });
 
-// ... (all code before this route) ...
-
-// --- FIXED: Search News route ---
 app.get("/api/search-news", async (req, res) => {
   try {
     const query = req.query.q;
     if (!query) return res.status(400).json({ message: "Missing query" });
 
-    // --- THIS IS THE FIX ---
-    // We MUST use the /top-headlines endpoint for localhost.
-    // It will search for your query within the day's top news.
     const url = `https://newsapi.org/v2/top-headlines?country=us&q=${encodeURIComponent(
       query
     )}&pageSize=10&apiKey=${process.env.NEWS_API_KEY}`;
-    // --- END FIX ---
     
     console.log(`🔍 Searching top-headlines for: "${query}"`);
     const { data } = await axios.get(url);
@@ -165,7 +152,6 @@ app.get("/api/search-news", async (req, res) => {
     res.status(status || 500).json({ message: "Error fetching search results" });
   }
 });
-// ---
 
 
 app.get("/api/related-news", async (req, res) => {
@@ -189,7 +175,7 @@ app.post("/api/register", async (req, res) => {
     if (existing) return res.status(400).json({ message: "User already exists" });
     const hashed = await bcrypt.hash(password, 10);
     await User.create({ username, email, password: hashed });
-    res.status(201).json({ message: "✅ User registered successfully" });
+    res.status(201).json({ message: " User registered successfully" });
   } catch (err) {
     res.status(500).json({ message: "Registration failed", error: err.message });
   }
@@ -202,7 +188,6 @@ app.post("/api/login", async (req, res) => {
     if (!user) return res.status(400).json({ message: "User not found" });
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(400).json({ message: "Invalid password" });
-    // Sign the token with the user's ID AND role
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "1d" });
     res.json({ message: "✅ Login successful", token });
   } catch (err) {
@@ -210,19 +195,14 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// --- USER-ONLY PROTECTED ROUTES ---
-
-// Profile route (now uses authCheck)
 app.get("/api/profile", authCheck, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // This is the old quiz system stat. We still send it.
     const statsDoc = await UserStats.findOne({ userId: user._id });
     const legacyStats = { attempted: statsDoc?.attempted || 0, correct: statsDoc?.correct || 0 };
     
-    // LEADERBOARD FIX: Sort by points
     const leaderboard = await User.find({}, 'username points')
                                   .sort({ points: -1 })
                                   .limit(10);
@@ -236,7 +216,6 @@ app.get("/api/profile", authCheck, async (req, res) => {
   }
 });
 
-// Bet history route (now uses authCheck AND calculates new stats)
 app.get("/api/profile/bets", authCheck, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -245,7 +224,6 @@ app.get("/api/profile/bets", authCheck, async (req, res) => {
                          .populate('questionId', 'title resolvingOptionName')
                          .sort({ timestamp: -1 });
 
-    // --- NEW STATS LOGIC ---
     let correctBets = 0;
     let totalBets = bets.length;
 
@@ -256,9 +234,6 @@ app.get("/api/profile/bets", authCheck, async (req, res) => {
         correctBets++;
       }
     }
-    // --- END NEW STATS LOGIC ---
-
-    // Send back the history AND the new calculated stats
     res.json({
       betHistory: bets,
       betStats: {
@@ -269,17 +244,16 @@ app.get("/api/profile/bets", authCheck, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ Error loading bet history:", err.message, err.stack);
+    console.error("Error loading bet history:", err.message, err.stack);
     res.status(500).json({ message: "Error loading bet history" });
   }
 });
 
-// Handle Bet Placement (now uses authCheck)
 app.post("/api/bet", authCheck, async (req, res) => {
   try {
     const { questionId, selectedOptionName, betAmount } = req.body;
     const amount = Number(betAmount);
-    const userId = req.user.id; // Get user ID from middleware
+    const userId = req.user.id; 
 
     if (!questionId || !selectedOptionName || !amount) {
       return res.status(400).json({ message: "Missing required bet information" });
@@ -324,9 +298,7 @@ app.post("/api/bet", authCheck, async (req, res) => {
 });
 
 
-// --- ADMIN-ONLY PROTECTED ROUTES ---
 
-// These routes use authCheck first, then adminCheck
 app.get("/api/admin/polls", authCheck, adminCheck, async (req, res) => {
   try {
     const polls = await Question.find().sort({ createdAt: -1 });
@@ -377,7 +349,6 @@ app.post("/api/admin/polls/create", authCheck, adminCheck, async (req, res) => {
   }
 });
 
-// Resolve Market & Payout Winners (now uses both middlewares)
 app.post("/api/question/:id/resolve", authCheck, adminCheck, async (req, res) => {
   try {
     const questionId = req.params.id; 
@@ -436,9 +407,6 @@ app.post("/api/question/:id/resolve", authCheck, adminCheck, async (req, res) =>
 });
 
 
-// --- OTHER ROUTES AND FUNCTIONS ---
-
-// (Legacy quiz answer route)
 app.post("/api/answer", async (req, res) => {
   try {
     const { id, selected, token } = req.body;
@@ -462,7 +430,6 @@ app.post("/api/answer", async (req, res) => {
   }
 });
 
-// Manual Add route
 app.get("/api/add", async (req, res) => {
   try {
     const newQuestion = {
@@ -482,7 +449,6 @@ app.get("/api/add", async (req, res) => {
   }
 });
 
-// Generate News route
 app.get("/api/generate-news", async (req, res) => {
   try {
     await generateNewsPolls();
@@ -493,7 +459,6 @@ app.get("/api/generate-news", async (req, res) => {
   }
 });
 
-// Market Maker Logic
 async function updateMarketPrices(questionId, boughtOptionName, betAmount) {
   try {
     const question = await Question.findById(questionId);
@@ -543,9 +508,9 @@ async function updateMarketPrices(questionId, boughtOptionName, betAmount) {
     console.log(`Prices updated for question ${questionId}. New prices:`, question.options.map(o => `${o.name}: ${o.price}¢`).join(', '));
 
   } catch (error) {
-    console.error(`❌ Error updating market prices for question ${questionId}:`, error.message);
+    console.error(`Error updating market prices for question ${questionId}:`, error.message);
   }
 }
 
 // Start the server
-app.listen(5000, () => console.log("🚀 Server running on port 5000"));
+app.listen(5000, () => console.log("Server running on port 5000"));

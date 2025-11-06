@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import styles from './Register.module.css'; // Shared styles
-import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa'; // Import icons
+import styles from './Register.module.css'; 
+import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa'; 
 
 const API_URL = 'http://localhost:5000/api';
 

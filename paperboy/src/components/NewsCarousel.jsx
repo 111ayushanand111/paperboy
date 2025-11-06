@@ -4,7 +4,6 @@ import styles from "./NewsCarousel.module.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
-// We no longer need react-icons for the arrows
 
 export default function NewsCarousel() {
   const [articles, setArticles] = useState([]);
@@ -28,7 +27,6 @@ export default function NewsCarousel() {
     fetchTopHeadlines();
   }, []);
 
-  // Updated settings
   const settings = {
     dots: true,
     infinite: true,
@@ -38,7 +36,6 @@ export default function NewsCarousel() {
     autoplay: true,
     autoplaySpeed: 3000,
     pauseOnHover: true,
-    arrows: true, // <-- This enables the default arrow navigation
   };
 
   if (loading) {
@@ -50,7 +47,6 @@ export default function NewsCarousel() {
   }
 
   return (
-    // We apply padding (via margin) to this container
     <div className={styles.carouselContainer}>
       <Slider {...settings}>
         {articles.map((article, index) => (

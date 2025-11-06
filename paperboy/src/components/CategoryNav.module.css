@@ -1,35 +1,34 @@
-/* src/components/CategoryNav.module.css */
 
 .nav {
   display: flex;
   justify-content: center;
-  gap: 0.75rem; /* Added a bit more spacing */
+  gap: 0.75rem; 
   padding: 1rem 0;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid #333; /* Dark border */
+  border-bottom: 1px solid #333; 
 }
 
 .nav button {
-  background-color: #242424; /* Dark background */
-  border: 1px solid #333; /* Subtle border */
+  background-color: #242424; 
+  border: 1px solid #333; 
   padding: 0.6rem 1.2rem;
   cursor: pointer;
-  border-radius: 8px; /* Rounded corners */
-  color: rgba(255, 255, 255, 0.87); /* Light text */
+  border-radius: 8px; 
+  color: rgba(255, 255, 255, 0.87); 
   font-weight: 500;
   font-size: 0.9rem;
-  text-transform: capitalize; /* Makes "for you" -> "For You" */
+  text-transform: capitalize; 
   transition: all 0.2s ease-in-out;
 }
 
 .nav button:hover {
-  background-color: #333; /* Slightly lighter on hover */
+  background-color: #333; 
   border-color: #555;
 }
 
 .nav button.active {
-  background-color: #646cff; /* Original theme purple */
-  color: #fff; /* White text */
+  background-color: #646cff; 
+  color: #fff;
   border-color: #646cff;
   font-weight: 600;
   box-shadow: 0 0 10px rgba(100, 108, 255, 0.3);

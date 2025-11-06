@@ -28,7 +28,6 @@ const questionSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    // --- ADD "trending" TO THIS LIST ---
     enum: ['politics', 'sports', 'tech', 'science', 'trending']
   },
   resolvingOptionName: {

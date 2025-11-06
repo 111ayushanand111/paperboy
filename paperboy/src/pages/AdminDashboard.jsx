@@ -6,13 +6,12 @@ import { FaPlus, FaTimes } from 'react-icons/fa';
 const API_URL = 'http://localhost:5000/api';
 
 function AdminDashboard() {
-  const [view, setView] = useState('resolve'); // 'resolve' or 'create'
+  const [view, setView] = useState('resolve'); //'resolve' or 'create'
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState('');
 
-  // State for the "Create Market" form
   const [newPoll, setNewPoll] = useState({
     title: '',
     category: 'politics',
@@ -43,7 +42,6 @@ function AdminDashboard() {
     }
   }, [view]);
 
-  // --- Create Market Handlers ---
   const handleCreateChange = (e) => {
     const { name, value } = e.target;
     setNewPoll((prev) => ({ ...prev, [name]: value }));
@@ -76,12 +74,11 @@ function AdminDashboard() {
     setFeedback('Creating market...');
     try {
       const { data } = await axios.post(
-        `${API_URL}/admin/polls/create`, // Using the new admin route
+        `${API_URL}/admin/polls/create`, 
         newPoll,
         authHeaders
       );
       setFeedback(`Market "${data.poll.title}" created successfully!`);
-      // Reset form
       setNewPoll({
         title: '',
         category: 'politics',
@@ -93,7 +90,6 @@ function AdminDashboard() {
     }
   };
 
-  // --- Resolve Market Handler ---
   const handleResolve = async (pollId, winningOptionName) => {
     if (!winningOptionName) {
       alert('Please select a winning option.');
@@ -101,18 +97,16 @@ function AdminDashboard() {
     }
     try {
       await axios.post(
-        `${API_URL}/question/${pollId}/resolve`, // Using the existing resolve route
+        `${API_URL}/question/${pollId}/resolve`, 
         { winningOptionName },
         authHeaders
       );
-      // Refresh the poll list to show it's closed
       fetchAllPolls();
     } catch (err) {
       alert(err.response?.data?.message || 'Error resolving market.');
     }
   };
 
-  // --- Render Functions ---
   const renderCreateMarket = () => (
     <form onSubmit={handleCreateSubmit} className={styles.form}>
       <h2>Create New Market</h2>
@@ -226,7 +220,6 @@ function AdminDashboard() {
   );
 }
 
-// Helper component for the poll list
 function PollResolveCard({ poll, onResolve }) {
   const [selectedWinner, setSelectedWinner] = useState(poll.options[0]?.name || '');
   const isResolved = !!poll.resolvingOptionName;

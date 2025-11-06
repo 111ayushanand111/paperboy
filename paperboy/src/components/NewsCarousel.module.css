@@ -1,17 +1,14 @@
-/*
-* src/components/NewsCarousel.module.css
-* Styles for carousel with 30/70 ratio and styled default arrows.
-*/
+
 
 .carouselContainer {
   width: 100%;
-  /* This margin adds the padding you requested */
   margin: 2rem 1em; 
   position: relative;
   height: 250px;
   border-radius: 12px;
   overflow: hidden;
   background: #0f172a;
+  margin-top: 7rem;
 }
 
 .loading {
@@ -77,21 +74,16 @@
   text-overflow: ellipsis;
 }
 
-/* --- Global Overrides for Slick Carousel --- */
-
-/* Make the slider itself fill our container */
 .carouselContainer :global(.slick-slider),
 .carouselContainer :global(.slick-list),
 .carouselContainer :global(.slick-track) {
   height: 100%;
 }
 
-/* Make each slide's inner div fill the height */
 .carouselContainer :global(.slick-slide > div) {
   height: 100%;
 }
 
-/* Style the dots */
 .carouselContainer :global(.slick-dots) {
   bottom: 10px;
 }
@@ -104,48 +96,3 @@
   opacity: 1;
 }
 
-/* --- Arrow Styling (Targeting default classes) --- */
-
-/*
-  By default, slick arrows are hidden. We make them
-  visible only when hovering the main container.
-*/
-.carouselContainer :global(.slick-prev),
-.carouselContainer :global(.slick-next) {
-  font-size: 2.5rem; /* Makes the arrow icon larger */
-  color: white;
-  opacity: 0; /* Hide by default */
-  z-index: 10;
-  width: 50px; /* Increase hit area */
-  height: 50px;
-  transition: opacity 0.2s ease;
-}
-
-/* Show on container hover */
-.carouselContainer:hover :global(.slick-prev),
-.carouselContainer:hover :global(.slick-next) {
-  opacity: 0.7;
-}
-
-.carouselContainer :global(.slick-prev:hover),
-.carouselContainer :global(.slick-next:hover) {
-  opacity: 1; /* Fully visible on arrow hover */
-}
-
-/* Position arrows */
-.carouselContainer :global(.slick-prev) {
-  left: 15px;
-}
-.carouselContainer :global(.slick-next) {
-  right: 15px;
-}
-
-/* Style the default arrow character */
-.carouselContainer :global(.slick-prev:before),
-.carouselContainer :global(.slick-next:before) {
-  font-family: 'slick'; /* Use the default icon font */
-  font-size: 1.5rem; /* Make the arrow character larger */
-  color: white;
-  opacity: 1; /* Ensure the character itself is visible */
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.7); 
-}

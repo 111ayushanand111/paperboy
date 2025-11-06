@@ -11,8 +11,8 @@ const API_URL = 'http://localhost:5000/api';
 function App() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState('all'); // Default to 'all' ('for you')
-  const [user, setUser] = useState(undefined); // Start as undefined to track loading
+  const [category, setCategory] = useState('all'); 
+  const [user, setUser] = useState(undefined); 
   const location = useLocation();
 
   const isHomePage = location.pathname === '/';
@@ -25,26 +25,21 @@ function App() {
         const { data } = await axios.get(`${API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(data.user); // Set the user object
+        setUser(data.user); 
       } catch (error) {
         console.error('Error fetching profile:', error);
-        localStorage.removeItem('token'); // Invalid token, remove it
-        setUser(null); // Set to null (not logged in)
+        localStorage.removeItem('token'); 
+        setUser(null); 
       }
     } else {
-      setUser(null); // No token, not logged in
+      setUser(null); 
     }
   };
 
-  // Fetch user on initial load
   useEffect(() => {
     fetchUserProfile();
   }, []);
 
-  // --- THIS IS THE FIX ---
-  // This logic now *only* depends on the category.
-  // When you click a tag, 'category' changes, and this code re-runs
-  // to fetch the new polls.
   useEffect(() => {
     const fetchQuestions = async () => {
       setLoading(true);
@@ -60,14 +55,13 @@ function App() {
     };
 
     fetchQuestions();
-  }, [category]); // Only re-run when 'category' changes
+  }, [category]); 
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUser(null);
   };
 
-  // Pass user, setUser, questions, and loading state to all child routes
   const contextValue = { user, setUser, questions, loading };
 
   return (

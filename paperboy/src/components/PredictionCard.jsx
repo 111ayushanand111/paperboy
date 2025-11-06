@@ -1,12 +1,10 @@
-// src/components/PredictionCard.jsx
 import { useEffect, useState } from 'react';
 import styles from './PredictionCard.module.css';
-import { Link } from 'react-router-dom'; // 1. Import Link
+import { Link } from 'react-router-dom'; 
 
 const PredictionCard = ({ question }) => {
   const [percentages, setPercentages] = useState({});
 
-  // We keep this to show the percentages on the grid card
   useEffect(() => {
     const generateFakePercentages = () => {
       let total = 100;

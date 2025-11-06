@@ -17,14 +17,12 @@ const userSchema = new mongoose.Schema({
   },
   points: {
     type: Number,
-    default: 1000 // or whatever your default is
+    default: 1000 
   },
-  // --- ADD THIS LINE ---
   role: {
     type: String,
     default: 'user' // 'user' or 'admin'
   }
-  // --- END ADD ---
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
